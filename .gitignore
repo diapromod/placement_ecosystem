@@ -1,0 +1,23 @@
+# .gitignore
+
+# Python virtual environment
+venv/
+env/
+__pycache__/
+*.pyc
+*.o
+*.pyd
+
+# Django specific files
+*.log
+local_settings.py
+db.sqlite3  # DONT commit your development database!
+/media/     # Folder where uploaded files go
+
+# Python Packages
+/static_collected/
+
+# IDE/OS files
+.DS_Store
+.idea/
+.vscode/

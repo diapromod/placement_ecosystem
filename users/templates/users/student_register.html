@@ -1,0 +1,12 @@
+<h2>Student Registration</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <h3>Account Info</h3>
+  {{ user_form.as_p }}
+
+  <h3>Student Profile</h3>
+  {{ extra_form.as_p }}
+
+  <button type="submit">Register</button>
+</form>

@@ -1,0 +1,69 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-light bg-white shadow-sm px-4">
+        <a class="navbar-brand fw-bold text-primary" href="#">
+            Placement Assistant <small class="text-muted">Final Year Project</small>
+        </a>
+        <div>
+            <a href="{% url 'coordinator_login' %}" class="btn btn-outline-primary me-2">Coordinator Login</a>
+            <a href="{% url 'student_login' %}" class="btn btn-primary">Student Login</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="fw-bold display-4">Smarter Placements, Powered by AI</h1>
+                <p class="text-muted mt-3">
+                    An AI-powered platform that helps students close skill gaps, build tailored resumes,
+                    and prepare for interviews while giving coordinators real-time tracking, automated filtering,
+                    and better placement insights.
+                </p>
+                <a href="{% url 'student_login' %}" class="btn btn-primary me-2">Student Login</a>
+                <a href="{% url 'coordinator_login' %}" class="btn btn-outline-primary">Coordinator Login</a>
+            </div>
+            <div class="col-md-6 text-center">
+                <img src="{% static 'images/landing.jpg' %}" alt="Students" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="container my-5">
+        <div class="row text-center g-4 mb-5">
+            <div class="col-md-6 p-4 border rounded shadow-sm">
+                <h5 class="fw-bold text-primary">Students</h5>
+                <p class="text-muted">
+                    Get personalized guidance to bridge skill gaps, generate company-specific resumes,
+                    receive targeted course recommendations, and practice with AI-powered mock interviews
+                    to boost placement readiness.
+                </p>
+            </div>
+            <div class="col-md-6 p-4 border rounded shadow-sm">
+                <h5 class="fw-bold text-primary">Coordinators</h5>
+                <p class="text-muted">
+                    Simplify recruitment management with automated eligibility filtering, streamlined job postings,
+                    real-time tracking of applications, and actionable insights into student preparedness and skill trends.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-3 fixed-bottom">
+        <small>PlacementEcosystem © 2025. All rights reserved.</small>
+    </footer>
+
+</body>
+</html>
