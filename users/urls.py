@@ -6,4 +6,7 @@ urlpatterns = [
     path("student/signup/", views.student_register, name="student_signup"),
     path("student/login/", views.student_login, name="student_login"),
     path("coordinator/login/", views.coordinator_login, name="coordinator_login"),
+    path("register/", views.student_register, name="student_register"),
+    path("logout/", views.user_logout, name="logout"),
 ]
+

@@ -40,7 +40,9 @@ INSTALLED_APPS = [
 
      # Our custom apps
     'users',
-    'core',          
+    'core',   
+    'students',
+    'coordinators',       
 ]
 
 MIDDLEWARE = [

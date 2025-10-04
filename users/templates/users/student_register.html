@@ -1,12 +1,127 @@
-<h2>Student Registration</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fff;
+        }
 
-<form method="post">
-  {% csrf_token %}
-  <h3>Account Info</h3>
-  {{ user_form.as_p }}
+        .container {
+            display: flex;
+            height: 100vh;
+        }
 
-  <h3>Student Profile</h3>
-  {{ extra_form.as_p }}
+        .illustration {
+            flex: 1;
+            background: #007bff; /* Blue background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* prevents scrollbars */
+        }
 
-  <button type="submit">Register</button>
-</form>
+        .illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* makes image scale and crop to fill */
+        }
+
+        /* Right side form */
+        .form-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .register-form {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .register-form h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .register-form input[type="text"],
+        .register-form input[type="email"],
+        .register-form input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .register-form button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .register-form button:hover {
+            background: #0056b3;
+        }
+
+        .register-form p {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .register-form p a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Illustration -->
+        <div class="illustration">
+            <img src="{% static 'images/sign_up.png' %}" alt="Illustration">
+        </div>
+
+        <!-- Right Form -->
+        <div class="form-section">
+            <form method="post" class="register-form">
+                {% csrf_token %}
+                <h2>Sign Up</h2>
+
+                <!-- Django renders fields with your custom styling -->
+                {{ form.non_field_errors }}
+
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.errors }}
+                        {{ field }}
+                    </div>
+                {% endfor %}
+
+                <button type="submit">Sign Up</button>
+
+                <p>Already have an account? <a href="{% url 'student_login' %}">Login</a></p>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

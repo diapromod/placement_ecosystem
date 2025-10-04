@@ -4,37 +4,75 @@ from .models import CustomUser, StudentProfile
 
 
 class StudentRegistrationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    # Extra StudentProfile fields
+    first_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={"placeholder": "First Name"})
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={"placeholder": "Last Name"})
+    )
+    contact_no = forms.CharField(
+        max_length=15,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Contact Number"})
+    )
+    university_roll_no = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={"placeholder": "University Roll Number"})
+    )
+    cgpa = forms.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={"placeholder": "CGPA"})
+    )
+    department = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={"placeholder": "Department"})
+    )
+    year_of_passout = forms.IntegerField(
+        widget=forms.NumberInput(attrs={"placeholder": "Year of Passout"})
+    )
+    active_backlogs = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={"placeholder": "Active Backlogs"})
+    )
+    history_of_backlogs = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput()
+    )
 
     class Meta:
         model = CustomUser
-        fields = ["username", "email", "password1", "password2"]
+        fields = ["username", "email", "password1", "password2"]  # ✅ only CustomUser fields
+        widgets = {
+            "username": forms.TextInput(attrs={"placeholder": "Username"}),
+        }
 
-    # Save both CustomUser and StudentProfile
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].widget.attrs.update({"placeholder": "Enter your email"})
+        self.fields["password1"].widget.attrs.update({"placeholder": "Password"})
+        self.fields["password2"].widget.attrs.update({"placeholder": "Confirm Password"})
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        user.is_active = True   # student accounts are active by default
+        user.role = "student"
         if commit:
             user.save()
-            # Create linked student profile
             StudentProfile.objects.create(
                 user=user,
-                first_name=self.cleaned_data.get("first_name", ""),
-                last_name=self.cleaned_data.get("last_name", ""),
-                contact_no=self.cleaned_data.get("contact_no", ""),
-                university_roll_no=self.cleaned_data.get("university_roll_no", ""),
-                cgpa=self.cleaned_data.get("cgpa", 0.0),
-                department=self.cleaned_data.get("department", ""),
-                year_of_passout=self.cleaned_data.get("year_of_passout", None),
-                active_backlogs=self.cleaned_data.get("active_backlogs", 0),
-                history_of_backlogs=self.cleaned_data.get("history_of_backlogs", False),
+                first_name=self.cleaned_data["first_name"],
+                last_name=self.cleaned_data["last_name"],
+                contact_no=self.cleaned_data["contact_no"],
+                university_roll_no=self.cleaned_data["university_roll_no"],
+                cgpa=self.cleaned_data["cgpa"],
+                department=self.cleaned_data["department"],
+                year_of_passout=self.cleaned_data["year_of_passout"],
+                active_backlogs=self.cleaned_data["active_backlogs"],
+                history_of_backlogs=self.cleaned_data["history_of_backlogs"],
+                email=self.cleaned_data["email"],
             )
         return user
-
-
-# Extra fields for StudentProfile
-class StudentExtraForm(forms.ModelForm):
-    class Meta:
-        model = StudentProfile
-        exclude = ["user"]

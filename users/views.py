@@ -10,24 +10,25 @@ def student_register(request):
     if request.method == "POST":
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.role = "student"  # assuming we added a role field in CustomUser
-            user.save()
+            form.save()
             messages.success(request, "Registration successful! Please log in.")
             return redirect("student_login")
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = StudentRegistrationForm()
     return render(request, "users/student_register.html", {"form": form})
 
+
 # Student Login
 def student_login(request):
     if request.method == "POST":
-        email = request.POST["email"]
+        username = request.POST["username"]
         password = request.POST["password"]
-        user = authenticate(request, email=email, password=password)
+        user = authenticate(request, username=username, password=password)
         if user is not None and user.role == "student":
             login(request, user)
-            return redirect("student_dashboard")  # create later
+            return redirect("student_dashboard")
         else:
             messages.error(request, "Invalid credentials or not a student.")
     return render(request, "users/student_login.html")
@@ -35,12 +36,28 @@ def student_login(request):
 # Coordinator Login
 def coordinator_login(request):
     if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
-        user = authenticate(request, email=email, password=password)
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+
         if user is not None and user.role == "coordinator":
             login(request, user)
-            return redirect("coordinator_dashboard")  # create later
+            return redirect("coordinator_dashboard")  # will create this
         else:
             messages.error(request, "Invalid credentials or not a coordinator.")
     return render(request, "users/coordinator_login.html")
+
+#Logout for both roles
+def user_logout(request):
+    role = None
+    if request.user.is_authenticated:
+        role = request.user.role
+        logout(request)
+
+    # Redirect to the correct login page based on role
+    if role == "student":
+        return redirect("student_login")
+    elif role == "coordinator":
+        return redirect("coordinator_login")
+    else:
+        return redirect("student_login")  # default fallback
