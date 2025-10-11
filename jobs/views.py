@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.http import HttpResponse
+from openpyxl import Workbook
 from .forms import JobForm
 from .models import Job, Application
 from users.models import StudentProfile
@@ -91,10 +93,9 @@ def job_list(request):
 
 @login_required
 def job_list(request):
-    """List all jobs with eligibility-based apply button."""
+    """List all coordinator-posted jobs and show eligibility status."""
     student_profile = get_object_or_404(StudentProfile, user=request.user)
-    jobs = Job.objects.filter(status='open', deadline__gte=timezone.now()).order_by('-created_at')
-
+    jobs = Job.objects.all().order_by('-created_at')
     applied_jobs = Application.objects.filter(student=request.user).values_list('job_id', flat=True)
 
     job_status = {}
@@ -116,12 +117,12 @@ def job_list(request):
         "jobs": jobs,
         "job_status": job_status,
     }
-    return render(request, "students/job_list.html", context)
+    return render(request, "students/apply_jobs.html", context)
 
 
 @login_required
 def apply_job(request, job_id):
-    """Handle job application."""
+    """Allow eligible students to apply."""
     job = get_object_or_404(Job, id=job_id)
     student_profile = get_object_or_404(StudentProfile, user=request.user)
 
@@ -139,3 +140,54 @@ def apply_job(request, job_id):
         messages.success(request, f"Applied successfully for {job.title}!")
     return redirect("job_list")
 
+
+@login_required
+def track_applications(request):
+    applications = Application.objects.filter(student=request.user).select_related('job')
+    return render(request, 'students/track_applications.html', {'applications': applications})
+
+@login_required
+def export_applicants_excel(request, job_id):
+    job = Job.objects.get(id=job_id)
+    applicants = Application.objects.filter(job=job)
+
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"{job.title} Applicants"
+
+    # Header row
+    ws.append([
+        "First Name",
+        "Last Name",
+        "University Roll No", 
+        "Email",
+        "Contact No.",
+        "Department",
+        "CGPA",
+        "No. of Active Backlogs",
+        "History of Backlogs",
+    ])
+
+    for app in applicants:
+        user = app.student 
+        profile = user.student_profile
+        ws.append([
+            # Data from StudentProfile
+            profile.first_name,
+            profile.last_name,
+            profile.university_roll_no,
+            profile.email,
+            profile.contact_no,
+            profile.department,
+            profile.cgpa,
+            profile.active_backlogs,
+            'Yes' if profile.history_of_backlogs else 'No'
+        ])
+
+    # Prepare response
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    filename = f"{job.title}_applicants.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response

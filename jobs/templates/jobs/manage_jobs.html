@@ -11,6 +11,8 @@
     .sidebar {
       width: 220px; height: 100vh; background: #f8f9fa; padding: 20px;
       border-right: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between;
+      position: sticky; 
+      top: 0;
     }
     .sidebar a { display: block; padding: 10px; color: #333; text-decoration: none; margin-bottom: 5px; border-radius: 5px; }
     .sidebar a:hover, .sidebar a.active { background: #007bff; color: #fff; }
@@ -87,7 +89,7 @@
             <a href="{% url 'close_applications' job.id %}" class="btn btn-danger btn-sm">Close Applications</a>
           {% endif %}
           
-          <a href="#" class="btn btn-success btn-sm">Export Applicants</a>
+          <a href="{% url 'export_applicants_excel' job.id %}" class="btn btn-success btn-sm">Export Applicants</a>
 
           {% if job.status != 'closed' %}
             <a href="{% url 'mark_completed' job.id %}" class="btn btn-secondary btn-sm">Mark as Completed</a>

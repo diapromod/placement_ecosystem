@@ -38,6 +38,8 @@
       text-decoration: none;
       border-radius: 6px;
       margin-bottom: 8px;
+      position: sticky; 
+      top: 0;
     }
     .sidebar a.active {
       background: #007bff;
@@ -91,8 +93,8 @@
       </div>
       <br>
       <a href="{% url 'student_profile' %}" class="active">Profile</a>
-      <a href="#">Track Applications</a>
-      <a href="#">Apply Jobs</a>
+      <a href="{% url 'track_applications' %}">Track Applications</a>
+      <a href="{% url 'job_list' %}">Apply Jobs</a>
       <a href="#">AI Tools</a>
 
       <form method="post" action="{% url 'logout' %}">

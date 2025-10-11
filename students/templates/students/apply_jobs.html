@@ -1,0 +1,207 @@
+{% load static %}
+{% load dict_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apply Jobs</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fb;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #f8f9fa;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: sticky; 
+      top: 0;
+    }
+
+    .sidebar form {
+      margin-top: auto !important;
+      padding-top: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #333;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar a.active {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .sidebar a:hover {
+      background: rgb(165, 165, 165);
+      color: #fff;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .job-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-open {
+      background: #d4f5d2;
+      color: #207d18;
+      border: 1px solid #46c23f;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-closed {
+      background: #ffe0e0;
+      color: #cc0000;
+      border: 1px solid #ff6b6b;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn-apply {
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+      border: none;
+    }
+
+    .btn-apply:disabled {
+      background: #888;
+    }
+
+    .btn-view {
+      border: 1px solid #007bff;
+      color: #007bff;
+      font-weight: 500;
+    }
+
+    .btn-view:hover {
+      background: #007bff;
+      color: white;
+    }
+
+    .job-details p {
+      margin-bottom: 6px;
+    }
+
+    .divider {
+      border-bottom: 1px solid #ddd;
+      margin: 15px 0;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo-container text-center mb-3">
+        <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
+      </div>
+
+      <a href="{% url 'student_profile' %}">Profile</a>
+      <a href="{% url 'track_applications' %}">Track Applications</a>
+      <a href="{% url 'job_list' %}" class="active">Apply Jobs</a>
+      <a href="#">AI Tools</a>
+
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100">Logout</button>
+      </form>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <h3 class="fw-bold mb-4">Apply Jobs</h3>
+
+      {% for job in jobs %}
+      <div class="job-card">
+        <div class="job-header mb-2">
+          <h6><strong>{{ job.title }}</strong> | {{ job.company_name }}</h6>
+          {% if job.status == 'open' %}
+            <span class="badge-open">Application Open</span>
+          {% else %}
+            <span class="badge-closed">Application Closed</span>
+          {% endif %}
+        </div>
+
+        <p class="text-muted mb-1"><strong>Deadline:</strong> {{ job.deadline|date:"F d, Y" }}</p>
+
+        <div class="job-details mt-3">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Job Location:</strong> {{ job.location }}</p>
+              <p><strong>Min CGPA:</strong>{{ job.min_cgpa }}</p>
+              <p><strong>Status:</strong> {{ job.get_status_display }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>CTC Offered:</strong> ₹{{ job.ctc|floatformat:0 }} ({{ job.get_slab_display }})</p>
+              <p><strong>Max Backlogs Allowed:</strong> {{ job.max_backlogs }}</p>
+              <p><strong>History of Backlogs Allowed:</strong> {{ job.history_allowed|yesno:"Yes,No" }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="d-flex gap-3">
+            {% if job.jd_file %}
+                <a href="{{ job.jd_file.url }}" target="_blank" class="btn btn-view">View JD</a>
+                {% else %}
+                <button class="btn btn-view" disabled>No JD Uploaded</button>
+            {% endif %}
+            {% if job.status == 'open' %}
+                {% with status=job_status|get_item:job.id %}
+                    {% if status == "eligible" %}
+                    <form method="post" action="{% url 'apply_job' job.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-apply">Apply Now</button>
+                    </form>
+                    {% elif status == "applied" %}
+                    <button class="btn btn-secondary" disabled>Already Applied</button>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled>Not Eligible</button>
+                    {% endif %}
+                {% endwith %}
+            {% else %}
+                <button class="btn btn-secondary" disabled>Application Closed</button>
+            {% endif %}
+        </div>
+      </div>
+      {% empty %}
+        <p class="text-muted">No open job postings currently.</p>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
