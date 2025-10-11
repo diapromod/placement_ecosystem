@@ -64,35 +64,6 @@ def edit_job(request, job_id):
 
 @login_required
 def job_list(request):
-    """List all jobs with eligibility-based apply button."""
-    student_profile = get_object_or_404(StudentProfile, user=request.user)
-    jobs = Job.objects.filter(status='open', deadline__gte=timezone.now()).order_by('-created_at')
-
-    applied_jobs = Application.objects.filter(student=request.user).values_list('job_id', flat=True)
-
-    job_status = {}
-    for job in jobs:
-        if job.id in applied_jobs:
-            job_status[job.id] = "applied"
-        elif student_profile.cgpa < job.min_cgpa:
-            job_status[job.id] = "low_cgpa"
-        elif student_profile.active_backlogs > job.max_backlogs:
-            job_status[job.id] = "too_many_backlogs"
-        elif not job.history_allowed and student_profile.history_of_backlogs:
-            job_status[job.id] = "history_not_allowed"
-        elif student_profile.highest_slab_placed and job.slab <= student_profile.highest_slab_placed:
-            job_status[job.id] = "already_placed_same_or_higher"
-        else:
-            job_status[job.id] = "eligible"
-
-    context = {
-        "jobs": jobs,
-        "job_status": job_status,
-    }
-    return render(request, "students/job_list.html", context)
-
-@login_required
-def job_list(request):
     """List all coordinator-posted jobs and show eligibility status."""
     student_profile = get_object_or_404(StudentProfile, user=request.user)
     jobs = Job.objects.all().order_by('-created_at')

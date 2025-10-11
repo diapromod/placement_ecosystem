@@ -168,13 +168,13 @@
               <div class="col-md-6"><strong>Job Location:</strong> {{ app.job.location }}</div>
               <div class="col-md-6"><strong>CTC Offered:</strong> ₹{{ app.job.ctc }}</div>
             </div>
-
-            <div class="job-info"><strong>Status:</strong> {{ app.job.status|default:"Application in Progress" }}</div>
+            <div class="job-info"><strong>Status:</strong> {{ app.job.get_status_display }}</div>
+            <div class="job-info"><strong>Recruitment Updates:</strong> {{ app.job.recruitment_updates }}</div>
 
             <!-- View JD Button -->
             {% if app.job.jd_file %}
               <a href="{{ app.job.jd_file.url }}" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
-                View Details
+                View JD
               </a>
             {% endif %}
           </div>

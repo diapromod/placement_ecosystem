@@ -30,6 +30,7 @@ class Job(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posted_jobs")
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    recruitment_updates = models.TextField(default="Applications are currently open.", blank=True)
 
     def save(self, *args, **kwargs):
         """Auto-assign slab based on CTC before saving"""

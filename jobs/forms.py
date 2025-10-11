@@ -6,7 +6,7 @@ class JobForm(forms.ModelForm):
         model = Job
         fields = [
             "title", "company_name", "location", "ctc", "deadline",
-            "min_cgpa", "max_backlogs", "history_allowed", "jd_file"
+            "min_cgpa", "max_backlogs", "history_allowed", "jd_file","recruitment_updates"
         ]
         widgets = {
             "deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),

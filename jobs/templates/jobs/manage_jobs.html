@@ -74,7 +74,7 @@
         <div class="mt-2">
           <strong>History of Backlogs Allowed:</strong> {% if job.history_allowed %}Yes{% else %}No{% endif %}
         </div>
-        <div class="mt-2"><strong>Status:</strong> {{ job.get_status_display }}</div>
+        <div class="mt-2"><strong>Recruitment Updates:</strong> {{ job.recruitment_updates }}</div>
 
         <div class="action-btns mt-3">
           {% if job.jd_file %}

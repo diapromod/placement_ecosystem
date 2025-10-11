@@ -134,6 +134,12 @@
             {% endif %}
           </div>
 
+           <div class="mb-3">
+                <label for="id_recruitment_updates" class="form-label">Recruitment Updates</label>
+                {{ form.recruitment_updates|add_class:"form-control"|attr:"rows:4" }}
+                <small class="form-text text-muted">e.g., "PPT on 15 Oct. Assessment link will be sent shortly."</small>
+            </div>
+
           <button type="submit" class="btn btn-primary w-100">
             {% if edit_mode %}Update Job{% else %}Submit Job{% endif %}
           </button>

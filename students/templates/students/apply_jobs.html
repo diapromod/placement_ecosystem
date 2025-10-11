@@ -147,7 +147,7 @@
       {% for job in jobs %}
       <div class="job-card">
         <div class="job-header mb-2">
-          <h6><strong>{{ job.title }}</strong> | {{ job.company_name }}</h6>
+          <h6 style="color: #007bff;;"><strong>{{ job.title }}</strong> | {{ job.company_name }}</h6>
           {% if job.status == 'open' %}
             <span class="badge-open">Application Open</span>
           {% else %}
