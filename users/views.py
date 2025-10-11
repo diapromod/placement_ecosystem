@@ -28,7 +28,7 @@ def student_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None and user.role == "student":
             login(request, user)
-            return redirect("student_dashboard")
+            return redirect("student_profile")
         else:
             messages.error(request, "Invalid credentials or not a student.")
     return render(request, "users/student_login.html")

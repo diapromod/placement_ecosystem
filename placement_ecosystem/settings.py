@@ -42,7 +42,11 @@ INSTALLED_APPS = [
     'users',
     'core',   
     'students',
-    'coordinators',       
+    'coordinators',   
+    'jobs',
+
+    # third-party apps
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -125,6 +129,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static', # Points to a global static folder at project root
 ]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

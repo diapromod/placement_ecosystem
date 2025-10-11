@@ -28,7 +28,7 @@
       margin-bottom: 5px;
       border-radius: 5px;
     }
-    .sidebar a:hover, .sidebar a.active {
+    .sidebar a.active {
       background: #007bff;
       color: #fff;
     }
@@ -61,18 +61,15 @@
         </div>
         <br>
         <a href="{% url 'coordinator_dashboard' %}" class="active">Dashboard</a>
-        <a href="#">Manage Jobs</a>
-        <a href="#">View Students</a>
-        <a href="#">Reports</a>
+        <a href="{% url 'post_job' %}">Create Job</a>
+        <a href="{% url 'manage_jobs' %}">Manage Jobs</a>
       </div>
 
       <!-- Logout button -->
-      <div>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
-        </form>
-      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
+      </form>
     </div>
 
     <!-- Main Content -->

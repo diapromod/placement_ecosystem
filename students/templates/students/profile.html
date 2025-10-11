@@ -1,0 +1,135 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fb;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #f8f9fa;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      /* --- START: Changes for bottom sticky logout --- */
+      display: flex; /* 1. Enable Flexbox */
+      flex-direction: column; /* 2. Stack items vertically */
+      /* --- END: Changes for bottom sticky logout --- */
+    }
+    
+    /* --- START: New CSS rule to push the form down --- */
+    .sidebar form {
+      margin-top: auto !important; /* 3. Push the form to the bottom */
+      padding-top: 10px; /* Optional: Add some padding above the button */
+    }
+    /* --- END: New CSS rule to push the form down --- */
+
+    .sidebar a {
+      display: block;
+      color: #333;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .sidebar a.active {
+      background: #007bff;
+      color: #fff;
+    }
+    .sidebar a:hover {
+      background: rgb(165, 165, 165);
+      color: #fff;
+    }
+    .main-content {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    h5 {
+      color: #007bff;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #333;
+      width: 200px;
+      display: inline-block;
+    }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo-img {
+      max-width: 100%;
+      height: auto;
+      max-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="d-flex">
+    <div class="sidebar"> 
+      <div class="logo-container">
+          <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
+      </div>
+      <br>
+      <a href="{% url 'student_profile' %}" class="active">Profile</a>
+      <a href="#">Track Applications</a>
+      <a href="#">Apply Jobs</a>
+      <a href="#">AI Tools</a>
+
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100">Logout</button>
+      </form>
+    </div>
+
+    <div class="main-content">
+      <h2><strong>Welcome, {{ student.first_name }}!</strong></h2>
+      <h5 class="text-muted mb-4">Profile Summary</h5>
+
+      <div class="section">
+        <h5>Basic Information</h5>
+        <p><span class="label">University Roll No.:</span> {{ student.university_roll_no }}</p>
+        <p><span class="label">First Name:</span> {{ student.first_name }}</p>
+        <p><span class="label">Last Name:</span> {{ student.last_name }}</p>
+        <p><span class="label">Email ID:</span> {{ student.email }}</p>
+        <p><span class="label">Contact No.:</span> {{ student.contact_no }}</p>
+        <p><span class="label">Department:</span> {{ student.department }}</p>
+        <p><span class="label">Year of Passout:</span> {{ student.year_of_passout }}</p>
+      </div>
+
+      <div class="section">
+        <h5>Academic Information</h5>
+        <p><span class="label">CGPA:</span> {{ student.cgpa }}</p>
+        <p><span class="label">No. of Backlogs:</span> {{ student.active_backlogs }}</p>
+        <p><span class="label">History of Backlogs:</span> {{ student.history_of_backlogs|yesno:"Yes,No" }}</p>
+      </div>
+
+      <div class="section">
+        <h5>Placement Information</h5>
+        <p><span class="label">No. of Offers Received:</span> {{ student.offers_received }}</p>
+        <p><span class="label">Companies Placed:</span> {{ student.companies_placed }}</p>
+        <p><span class="label">Highest Slab Placed:</span> {{ student.highest_slab_placed }}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

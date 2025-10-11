@@ -1,0 +1,143 @@
+{% load static %}
+{% load widget_tweaks %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% if edit_mode %}Edit Job{% else %}Post Job{% endif %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #f8f9fa;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar a {
+      display: block;
+      padding: 10px;
+      color: #333;
+      text-decoration: none;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+    .sidebar a:hover, .sidebar a.active {
+      background: #007bff;
+      color: #fff;
+    }
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo-img {
+      max-width: 100%;
+      height: auto;
+      max-height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div>
+        <div class="logo-container">
+          <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
+        </div>
+        <br>
+        <a href="{% url 'coordinator_dashboard' %}">Dashboard</a>
+        <a href="{% url 'post_job' %}" class="{% if not edit_mode %}active{% endif %}">Create Job</a>
+        <a href="{% url 'manage_jobs' %}" class="{% if edit_mode %}active{% endif %}">Manage Jobs</a>
+      </div>
+
+      <div>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <h2 class="mb-4">
+        {% if edit_mode %}✏️ Edit Job{% else %}📌 Post New Job{% endif %}
+      </h2>
+
+      <div class="card shadow-sm p-4">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_title" class="form-label">Job Title</label>
+            {{ form.title|add_class:"form-control" }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_company_name" class="form-label">Company Name</label>
+            {{ form.company_name|add_class:"form-control" }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_location" class="form-label">Location</label>
+            {{ form.location|add_class:"form-control" }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_ctc" class="form-label">CTC (₹)</label>
+            {{ form.ctc|add_class:"form-control" }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_deadline" class="form-label">Application Deadline</label>
+            {{ form.deadline|add_class:"form-control" }}
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="id_min_cgpa" class="form-label">Minimum CGPA</label>
+              {{ form.min_cgpa|add_class:"form-control" }}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="id_max_backlogs" class="form-label">Maximum Backlogs</label>
+              {{ form.max_backlogs|add_class:"form-control" }}
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            {{ form.history_allowed|add_class:"form-check-input" }}
+            <label for="id_history_allowed" class="form-check-label">History of Backlogs Allowed</label>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_jd_file" class="form-label">Job Description (PDF)</label>
+            {{ form.jd_file|add_class:"form-control" }}
+            {% if edit_mode and job.jd_file %}
+              <p class="mt-2">
+                Current file: 
+                <a href="{{ job.jd_file.url }}" target="_blank">{{ job.jd_file.name }}</a>
+              </p>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            {% if edit_mode %}Update Job{% else %}Submit Job{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
