@@ -133,7 +133,7 @@
       <a href="{% url 'student_profile' %}">Profile</a>
       <a href="{% url 'track_applications' %}" class="active">Track Applications</a>
       <a href="{% url 'job_list' %}">Apply Jobs</a>
-      <a href="#">AI Tools</a>
+      <a href="{% url 'ai_tools' %}">AI Tools</a>
 
       <form method="post" action="/">
         {% csrf_token %}

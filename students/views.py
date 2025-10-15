@@ -7,3 +7,7 @@ def student_profile(request):
     return render(request, "students/profile.html", {
         "student": student,
     })
+
+@login_required
+def ai_tools(request):
+    return render(request, 'students/ai_tools.html')

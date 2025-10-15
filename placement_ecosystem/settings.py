@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'students',
     'coordinators',   
     'jobs',
+    'matcher',
 
     # third-party apps
     'widget_tweaks',

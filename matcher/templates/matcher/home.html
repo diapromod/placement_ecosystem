@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Match Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f7fb;
+    }
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #f8f9fa;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: sticky; 
+      top: 0;
+    }
+
+    .sidebar form {
+      margin-top: auto !important;
+      padding-top: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #333;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar a.active {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .sidebar a:hover {
+      background: rgb(165, 165, 165);
+      color: #fff;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;   /* horizontal center */
+      align-items: center;       /* vertical center */
+      height: 100vh;             /* ensures it takes full screen height */
+    }
+
+    .analyzer-box {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      padding: 40px;
+      max-width: 700px;
+      text-align: center;
+    }
+
+
+    .analyzer-box h3 {
+      font-weight: 600;
+      color: #0056d2;
+      margin-bottom: 20px;
+    }
+
+    .analyzer-box p {
+      color: #555;
+      font-size: 15px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .form-control {
+      border-radius: 6px;
+      margin-bottom: 20px;
+      padding: 10px;
+    }
+
+    .btn-primary {
+      border-radius: 6px;
+      font-weight: 500;
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="sidebar"> 
+      <div class="logo-container">
+          <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
+      </div>
+      <br>
+      <a href="{% url 'student_profile' %}" >Profile</a>
+      <a href="{% url 'track_applications' %}">Track Applications</a>
+      <a href="{% url 'job_list' %}">Apply Jobs</a>
+      <a href="{% url 'ai_tools' %}" class="active">AI Tools</a>
+
+      <form method="post" action="/">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100">Logout</button>
+      </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="analyzer-box">
+        <h3>Job Match Analyzer</h3>
+        <p>
+          Stop guessing and start knowing. Our Job Match Analyzer helps you compare your resume with any Job Description (JD) to receive an instant Compatibility Score. 
+          Upload both files and see your strengths and areas for improvement.
+        </p>
+
+        {% if error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="mt-3">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Upload Resume</label>
+            {{ form.resume }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Upload Job Description</label>
+            {{ form.jd }}
+          </div>
+          <button type="submit" class="btn btn-primary">Upload & Analyze</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
