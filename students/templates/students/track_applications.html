@@ -35,7 +35,7 @@
       color: #fff;
     }
     .sidebar a:hover {
-      background: #007bff;
+      background: rgb(165, 165, 165);
       color: #fff;
     }
     .sidebar form { margin-top: auto; }
@@ -135,7 +135,7 @@
       <a href="{% url 'job_list' %}">Apply Jobs</a>
       <a href="#">AI Tools</a>
 
-      <form method="post" action="{% url 'logout' %}">
+      <form method="post" action="/">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger w-100 mt-auto">Logout</button>
       </form>

@@ -66,7 +66,7 @@
       </div>
 
       <!-- Logout button -->
-      <form method="post" action="{% url 'logout' %}">
+      <form method="post" action="/">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
       </form>
@@ -76,7 +76,7 @@
     <div class="main-content">
       <h2><strong>Welcome,{{ request.user.first_name }}!</strong></h2>
       <hr>
-      <p>🚧 Features under construction...</p>
+      <p>Features under construction...</p>
     </div>
   </div>
 </body>
