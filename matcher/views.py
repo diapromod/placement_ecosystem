@@ -61,6 +61,15 @@ def home(request):
                 except Exception:
                     sbert_score = None
 
+            # ✅ Convert fractional scores (0–1) → percentages (0–100)
+            if jacc is not None:
+                jacc = round(jacc * 100, 2)
+            if heur is not None:
+                heur = round(heur * 100, 2)
+            if sbert_score is not None:
+                sbert_score = round(sbert_score * 100, 2)
+
+            # Now render context
             context["result"] = {
                 "name": r.name,
                 "email": r.email,
@@ -73,6 +82,7 @@ def home(request):
                 "resume_id": r.id,
                 "jd_id": jd_obj.id if jd_obj else None,
             }
+
             return render(request, "matcher/result.html", context)
         else:
             context["error"] = "Form is invalid."

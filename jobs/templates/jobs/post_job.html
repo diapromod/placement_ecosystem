@@ -15,26 +15,43 @@
       width: 220px;
       height: 100vh;
       background: #f8f9fa;
-      padding: 20px;
       border-right: 1px solid #ddd;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
       position: sticky; 
       top: 0;
     }
+
+    .sidebar form {
+      margin-top: auto !important;
+      padding-top: 10px;
+    }
+
     .sidebar a {
       display: block;
-      padding: 10px;
       color: #333;
+      padding: 10px;
       text-decoration: none;
-      margin-bottom: 5px;
-      border-radius: 5px;
+      border-radius: 6px;
+      margin-bottom: 8px;
     }
-    .sidebar a:hover, .sidebar a.active {
+
+    .sidebar a.active {
       background: #007bff;
       color: #fff;
     }
+
+    .sidebar a:hover {
+      background: rgb(165, 165, 165);
+      color: #fff;
+    }
+
+    /* Push logout to bottom */
+    .sidebar form {
+      margin-top: auto; /* pushes form to bottom */
+    }
+
     .main-content {
       flex: 1;
       padding: 30px;
@@ -59,17 +76,16 @@
           <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
         </div>
         <br>
-        <a href="{% url 'coordinator_dashboard' %}">Dashboard</a>
-        <a href="{% url 'post_job' %}" class="{% if not edit_mode %}active{% endif %}">Create Job</a>
-        <a href="{% url 'manage_jobs' %}" class="{% if edit_mode %}active{% endif %}">Manage Jobs</a>
+        <a href="{% url 'coordinator_dashboard' %}" >Dashboard</a>
+        <a href="{% url 'post_job' %}" class="active">Create Job</a>
+        <a href="{% url 'manage_jobs' %}">Manage Jobs</a>
       </div>
 
-      <div>
-        <form method="post" action="/">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
-        </form>
-      </div>
+      <!-- Logout button -->
+      <form method="post" action="/">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
+      </form>
     </div>
 
     <!-- Main Content -->

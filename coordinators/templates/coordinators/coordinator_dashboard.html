@@ -14,27 +14,41 @@
       width: 220px;
       height: 100vh;
       background: #f8f9fa;
-      padding: 20px;
       border-right: 1px solid #ddd;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between; /* push logout down */
+      position: sticky; 
+      top: 0;
     }
+
+    .sidebar form {
+      margin-top: auto !important;
+      padding-top: 10px;
+    }
+
     .sidebar a {
       display: block;
-      padding: 10px;
       color: #333;
+      padding: 10px;
       text-decoration: none;
-      margin-bottom: 5px;
-      border-radius: 5px;
+      border-radius: 6px;
+      margin-bottom: 8px;
     }
+
     .sidebar a.active {
       background: #007bff;
       color: #fff;
     }
+
     .sidebar a:hover {
       background: rgb(165, 165, 165);
       color: #fff;
+    }
+
+    /* Push logout to bottom */
+    .sidebar form {
+      margin-top: auto; /* pushes form to bottom */
     }
     .main-content {
       flex: 1;

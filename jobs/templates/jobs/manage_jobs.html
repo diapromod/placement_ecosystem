@@ -9,13 +9,46 @@
   <style>
     body { font-family: 'Segoe UI', sans-serif; }
     .sidebar {
-      width: 220px; height: 100vh; background: #f8f9fa; padding: 20px;
-      border-right: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between;
+      width: 220px;
+      height: 100vh;
+      background: #f8f9fa;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
       position: sticky; 
       top: 0;
     }
-    .sidebar a { display: block; padding: 10px; color: #333; text-decoration: none; margin-bottom: 5px; border-radius: 5px; }
-    .sidebar a:hover, .sidebar a.active { background: #007bff; color: #fff; }
+
+    .sidebar form {
+      margin-top: auto !important;
+      padding-top: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #333;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar a.active {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .sidebar a:hover {
+      background: rgb(165, 165, 165);
+      color: #fff;
+    }
+
+    /* Push logout to bottom */
+    .sidebar form {
+      margin-top: auto; /* pushes form to bottom */
+    }
+
     .main-content { flex: 1; padding: 20px; }
     .job-card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #fff; }
     .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; }
@@ -30,20 +63,20 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <div>
-        <div class="logo-container text-center mb-3">
-          <img src="{% static 'images/logo.png' %}" alt="Logo" class="img-fluid" style="max-height:40px;">
+        <div class="logo-container">
+          <img src="{% static 'images/logo.png' %}" alt="PlacementAssistant Logo" class="img-fluid logo-img">
         </div>
-        <a href="{% url 'coordinator_dashboard' %}">Dashboard</a>
-        <a href="{% url 'post_job' %}">Post New Job</a>
+        <br>
+        <a href="{% url 'coordinator_dashboard' %}" >Dashboard</a>
+        <a href="{% url 'post_job' %} ">Create Job</a>
         <a href="{% url 'manage_jobs' %}" class="active">Manage Jobs</a>
       </div>
 
-      <div>
-        <form method="post" action="/">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
-        </form>
-      </div>
+      <!-- Logout button -->
+      <form method="post" action="/">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger w-100 mt-3">Logout</button>
+      </form>
     </div>
 
     <!-- Main -->

@@ -42,7 +42,7 @@ def coordinator_login(request):
 
         if user is not None and user.role == "coordinator":
             login(request, user)
-            return redirect("coordinator_dashboard")  # will create this
+            return redirect("manage_jobs")  # will create this
         else:
             messages.error(request, "Invalid credentials or not a coordinator.")
     return render(request, "users/coordinator_login.html")
