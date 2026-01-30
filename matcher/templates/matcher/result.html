@@ -208,6 +208,11 @@
         <hr>
 
         <div class="text-center">
+          {% if result.jd_id %}
+          <a href="{% url 'learning_paths:recommend' result.resume_id result.jd_id %}" class="btn btn-success px-4 me-2">
+            Get Learning Path Recommendation
+          </a>
+          {% endif %}
           <a href="{% url 'matcher:home' %}" class="btn btn-primary px-4">
             Back to Analyzer
           </a>

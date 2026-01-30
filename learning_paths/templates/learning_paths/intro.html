@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Learning Path Recommender</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Learning Path Recommender</h1>
+        <p class="lead">This tool recommends courses to bridge the gap between your resume skills and the job requirements.</p>
+        <p><strong>Important:</strong> You must first perform a Job Match Analysis to identify missing skills before using this recommender.</p>
+        <a href="{% url 'matcher:home' %}" class="btn btn-primary">Go to Job Match Analyzer</a>
+        <a href="{% url 'ai_tools' %}" class="btn btn-secondary">Back to AI Tools</a>
+    </div>
+</body>
+</html>

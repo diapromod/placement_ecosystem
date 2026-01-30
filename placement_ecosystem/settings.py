@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'learning_paths',
 
      # Our custom apps
     'users',
@@ -140,4 +141,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.CustomUser"
+
+# API Keys for Course Recommendations
+UDEMY_CLIENT_ID = 'your_udemy_client_id'  # Get from https://www.udemy.com/instructor/account/api/
+UDEMY_CLIENT_SECRET = 'your_udemy_client_secret'
+YOUTUBE_API_KEY = 'your_youtube_api_key'  # Get from Google Cloud Console
 
