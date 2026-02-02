@@ -18,12 +18,14 @@ def process_resume(request):
             if not text:
                 print("DEBUG: No text extracted!")
             
-            # Simple extraction
+            # Extract all fields
             name = utils.extract_name(text) or ""
             email = utils.extract_email(text) or ""
             phone = utils.extract_phone(text) or ""
+            cgpa = utils.extract_cgpa(text)
+            department = utils.extract_department(text) or ""
             
-            print(f"DEBUG: Extracted - Name: {name}, Email: {email}, Phone: {phone}")
+            print(f"DEBUG: Extracted - Name: {name}, Email: {email}, Phone: {phone}, CGPA: {cgpa}, Dept: {department}")
 
             # Split name into first/last
             parts = name.split()
@@ -36,6 +38,8 @@ def process_resume(request):
                 "last_name": last_name,
                 "email": email,
                 "contact_no": phone,
+                "cgpa": cgpa,
+                "department": department,
             }
             print("DEBUG: Session data set:", request.session["registration_data"])
             messages.success(request, "Resume parsed successfully! Please review details.")

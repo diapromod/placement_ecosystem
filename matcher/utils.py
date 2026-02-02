@@ -127,6 +127,74 @@ def extract_name(text):
             return s
     return None
 
+def extract_cgpa(text):
+    """
+    Extract CGPA from resume text.
+    Looks for patterns like:
+    - CGPA: 8.5
+    - GPA 3.8/4.0
+    - 8.5 CGPA
+    - CGPA 8.5 out of 10
+    """
+    if not text:
+        return None
+    
+    # Normalize text
+    text_lower = text.lower()
+    
+    # Pattern 1: "CGPA: 8.5" or "GPA: 3.8"
+    match = re.search(r'(?:cgpa|gpa)\s*:?\s*(\d+\.?\d*)', text_lower)
+    if match:
+        cgpa = float(match.group(1))
+        # Normalize to 10-point scale if needed
+        if cgpa <= 4.0:  # Likely 4.0 scale
+            cgpa = (cgpa / 4.0) * 10.0
+        return round(cgpa, 2)
+    
+    # Pattern 2: "8.5 CGPA" or "8.5/10"
+    match = re.search(r'(\d+\.?\d*)\s*(?:cgpa|gpa|/10)', text_lower)
+    if match:
+        cgpa = float(match.group(1))
+        if cgpa <= 4.0:
+            cgpa = (cgpa / 4.0) * 10.0
+        return round(cgpa, 2)
+    
+    return None
+
+def extract_department(text):
+    """
+    Extract department/branch from resume.
+    Looks for common engineering departments.
+    """
+    if not text:
+        return None
+    
+    # Common department keywords
+    departments = {
+        'computer science': ['computer science', 'cs', 'cse', 'computer engineering'],
+        'information technology': ['information technology', 'it', 'info tech'],
+        'electronics': ['electronics', 'ece', 'electronics and communication', 'electronics & communication'],
+        'electrical': ['electrical', 'ee', 'electrical engineering'],
+        'mechanical': ['mechanical', 'me', 'mechanical engineering'],
+        'civil': ['civil', 'ce', 'civil engineering'],
+        'chemical': ['chemical', 'che', 'chemical engineering'],
+        'biotechnology': ['biotechnology', 'biotech', 'bt'],
+        'data science': ['data science', 'ds', 'data analytics'],
+    }
+    
+    text_lower = text.lower()
+    
+    # Look for department mentions
+    for dept_name, keywords in departments.items():
+        for keyword in keywords:
+            # Use word boundaries to avoid partial matches
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            if re.search(pattern, text_lower):
+                return dept_name.title()
+    
+    return None
+
+
 # ---------- Skills extraction ----------
 def normalize_text(t: str):
     return re.sub(r"[^\w\s]", " ", t).lower()
