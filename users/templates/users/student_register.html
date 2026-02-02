@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Student Registration</title>
@@ -19,17 +20,20 @@
 
         .illustration {
             flex: 1;
-            background: #007bff; /* Blue background */
+            background: #007bff;
+            /* Blue background */
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* prevents scrollbars */
+            overflow: hidden;
+            /* prevents scrollbars */
         }
 
         .illustration img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* makes image scale and crop to fill */
+            object-fit: cover;
+            /* makes image scale and crop to fill */
         }
 
         /* Right side form */
@@ -94,6 +98,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Left Illustration -->
@@ -107,14 +112,65 @@
                 {% csrf_token %}
                 <h2>Sign Up</h2>
 
+                <!-- Resume Upload Section -->
+                <div
+                    style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <p style="margin: 0 0 10px; font-weight: bold; color: #495057;">Use Resume to Auto-fill</p>
+                    <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                        <input type="file" id="resumeUpload" style="font-size: 12px; width: 180px;">
+                        <button type="button" onclick="uploadResume()"
+                            style="width: auto; margin-top: 0; padding: 8px 12px; background-color: #28a745;">Auto-fill</button>
+                    </div>
+                    <small id="uploadStatus" style="display: block; margin-top: 5px; color: #6c757d;"></small>
+                </div>
+
+                <!-- Hidden form for resume submission -->
+                <script>
+                    function uploadResume() {
+                        const fileInput = document.getElementById('resumeUpload');
+                        const status = document.getElementById('uploadStatus');
+
+                        if (!fileInput.files.length) {
+                            status.innerText = "Please select a file first.";
+                            status.style.color = "red";
+                            return;
+                        }
+
+                        status.innerText = "Uploading...";
+                        status.style.color = "blue";
+
+                        const formData = new FormData();
+                        formData.append('resume', fileInput.files[0]);
+                        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+                        fetch('{% url "process_resume" %}', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => {
+                                if (response.redirected) {
+                                    window.location.href = response.url; // Reload page with pre-filled data
+                                } else {
+                                    status.innerText = "Upload failed.";
+                                    status.style.color = "red";
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                status.innerText = "Error uploading.";
+                                status.style.color = "red";
+                            });
+                    }
+                </script>
+
                 <!-- Django renders fields with your custom styling -->
                 {{ form.non_field_errors }}
 
                 {% for field in form %}
-                    <div class="form-group">
-                        {{ field.errors }}
-                        {{ field }}
-                    </div>
+                <div class="form-group">
+                    {{ field.errors }}
+                    {{ field }}
+                </div>
                 {% endfor %}
 
                 <button type="submit">Sign Up</button>
@@ -124,4 +180,5 @@
         </div>
     </div>
 </body>
+
 </html>

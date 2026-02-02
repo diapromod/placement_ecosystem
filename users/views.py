@@ -4,19 +4,72 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import StudentRegistrationForm
 from .models import CustomUser
+from matcher import utils  # Import matcher util for parsing
+
+def process_resume(request):
+    """Handle resume upload, parse it, and store data in session."""
+    print("DEBUG: process_resume view called")
+    if request.method == "POST" and request.FILES.get("resume"):
+        resume_file = request.FILES["resume"]
+        print(f"DEBUG: File received: {resume_file.name}, size: {resume_file.size}")
+        try:
+            text = utils.extract_text_from_file(resume_file)
+            print(f"DEBUG: Extracted text length: {len(text)}")
+            if not text:
+                print("DEBUG: No text extracted!")
+            
+            # Simple extraction
+            name = utils.extract_name(text) or ""
+            email = utils.extract_email(text) or ""
+            phone = utils.extract_phone(text) or ""
+            
+            print(f"DEBUG: Extracted - Name: {name}, Email: {email}, Phone: {phone}")
+
+            # Split name into first/last
+            parts = name.split()
+            first_name = parts[0] if parts else ""
+            last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+            # Store in session
+            request.session["registration_data"] = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "contact_no": phone,
+            }
+            print("DEBUG: Session data set:", request.session["registration_data"])
+            messages.success(request, "Resume parsed successfully! Please review details.")
+        except Exception as e:
+            print(f"DEBUG: Exception during parsing: {e}")
+            messages.error(request, f"Error parsing resume: {e}")
+    else:
+        print("DEBUG: No file found in POST request")
+            
+    return redirect("student_register")
 
 # Student Signup
 def student_register(request):
+    # Check for pre-filled data from session (don't pop yet, in case validity check fails)
+    initial_data = request.session.get("registration_data", None)
+    
     if request.method == "POST":
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
             form.save()
+            # clear session data only after successful save
+            if "registration_data" in request.session:
+                del request.session["registration_data"]
             messages.success(request, "Registration successful! Please log in.")
             return redirect("student_login")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = StudentRegistrationForm()
+        # Pre-fill form if data exists
+        form = StudentRegistrationForm(initial=initial_data) if initial_data else StudentRegistrationForm()
+        # Optionally clear it if you only want it to persist for one render:
+        # if "registration_data" in request.session:
+        #    del request.session["registration_data"]
+        
     return render(request, "users/student_register.html", {"form": form})
 
 
