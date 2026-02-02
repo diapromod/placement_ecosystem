@@ -245,78 +245,108 @@ def heuristic_weighted_score(resume_skills, jd_skills, weights=None):
     return round(total, 4)
 
 # ---------- Optional SBERT semantic similarity ----------
-def sbert_similarity_score(resume_text, jd_text):
+# ---------- SBERT Semantic Utilities ----------
+def sbert_similarity_score(text_a, text_b):
+    """Compute cosine similarity between two strings."""
+    if not SBERT_AVAILABLE or not text_a or not text_b:
+        return 0.0
+    emb_a = SBERT_MODEL.encode(text_a, convert_to_tensor=True)
+    emb_b = SBERT_MODEL.encode(text_b, convert_to_tensor=True)
+    return util.cos_sim(emb_a, emb_b).item()
+
+def get_semantic_matches(candidate_skills, required_skills, threshold=0.75):
     """
-    If SBERT installed, compute semantic similarity between the full texts.
-    Returns cosine similarity float [0,1]
+    Finds which required skills are 'matched' semantically by candidate skills.
+    Returns:
+        - semantic_matches: List of tuples (required_skill, candidate_skill, score)
+        - semantic_matched_set: Set of required skills found semantically
     """
-    if not SBERT_AVAILABLE:
-        raise RuntimeError("SBERT not available; install sentence-transformers.")
-    # encode
-    emb_r = SBERT_MODEL.encode(resume_text, convert_to_tensor=True)
-    emb_j = SBERT_MODEL.encode(jd_text, convert_to_tensor=True)
-    sim = util.cos_sim(emb_r, emb_j).item()
-    # numeric -> clamp 0..1
-    return max(0.0, min(1.0, float(sim)))
+    if not SBERT_AVAILABLE or not candidate_skills or not required_skills:
+        return [], set()
+
+    # Encode all candidate skills once
+    cand_embs = SBERT_MODEL.encode(candidate_skills, convert_to_tensor=True)
+    
+    matches = []
+    matched_set = set()
+    
+    for req in required_skills:
+        req_emb = SBERT_MODEL.encode(req, convert_to_tensor=True)
+        # Compute similarity against all candidate skills
+        scores = util.cos_sim(req_emb, cand_embs)[0]
+        max_score, idx = scores.max().item(), scores.argmax().item()
+        
+        if max_score >= threshold:
+            matches.append((req, candidate_skills[idx], round(max_score, 2)))
+            matched_set.add(req)
+            
+    return matches, matched_set
 
 # ---------- Unified Matching Analysis ----------
 def analyze_match(resume_text, jd_text, resume_skills, jd_skills):
     """
-    Unified matching analysis that provides actionable insights.
-    
-    Returns dict with:
-        - score: Overall compatibility (0-100)
-        - matched_skills: List of skills candidate has
-        - missing_skills: List of skills candidate needs
-        - summary: Human-readable summary
-        - keyword_match: Percentage based on skills overlap
-        - semantic_match: Percentage based on text similarity (if available)
+    Unified matching analysis using Keyword and Precise Semantic analysis.
     """
     resume_skills_set = set(resume_skills or [])
     jd_skills_set = set(jd_skills or [])
     
-    # 1. Keyword Match (Primary Signal)
-    if jd_skills_set:
-        matched = resume_skills_set.intersection(jd_skills_set)
-        missing = jd_skills_set - resume_skills_set
-        keyword_match = (len(matched) / len(jd_skills_set)) * 100
-    else:
-        matched = set()
-        missing = set()
-        keyword_match = 0.0
+    # 1. Direct Keyword Match
+    matched = resume_skills_set.intersection(jd_skills_set)
+    potentially_missing = jd_skills_set - resume_skills_set
     
-    # 2. Semantic Match (Secondary Signal, if available)
-    semantic_match = None
+    # 2. Semantic Analysis (Handling Synonyms)
+    semantic_insights = []
+    semantic_matched_reqs = set()
+    
+    if SBERT_AVAILABLE and potentially_missing and resume_skills:
+        semantic_insights, semantic_matched_reqs = get_semantic_matches(
+            list(resume_skills_set), 
+            list(potentially_missing)
+        )
+    
+    # Actual missing (not found by keyword OR semantic match)
+    missing = potentially_missing - semantic_matched_reqs
+    
+    # 3. Normalized Scoring
+    # Total Score = (Exact Keyword Matches + Semantic Partial Matches) / Total Requirements
+    total_reqs = len(jd_skills_set)
+    if total_reqs > 0:
+        # We value exact matches at 1.0 and semantic matches at 0.85
+        score_val = (len(matched) * 1.0) + (len(semantic_matched_reqs) * 0.85)
+        final_score = (score_val / total_reqs) * 100
+    else:
+        final_score = 0.0
+
+    # 4. Content-based Semantic Score (Full text context)
+    full_text_sim = 0.0
     if SBERT_AVAILABLE and resume_text and jd_text:
-        try:
-            semantic_match = sbert_similarity_score(resume_text, jd_text) * 100
-        except Exception:
-            semantic_match = None
-    
-    # 3. Weighted Final Score
-    if semantic_match is not None:
-        # Use both signals: 70% keyword, 30% semantic
-        final_score = (0.7 * keyword_match) + (0.3 * semantic_match)
-    else:
-        # Use only keyword matching
-        final_score = keyword_match
-    
-    # 4. Generate Summary
+        full_text_sim = sbert_similarity_score(resume_text, jd_text) * 100
+
+    # Adjust final score slightly based on full-text context (±5%)
+    # This rewards resumes that have the right 'tone' and 'context'
+    if full_text_sim > 0:
+        context_bonus = (full_text_sim - 50) / 10 # -5 to +5 range
+        final_score = max(0, min(100, final_score + context_bonus))
+
+    # 5. Generate Summary
     if final_score >= 75:
-        summary = "Excellent match! You meet most of the requirements."
+        summary = "Excellent match! You meet most technical requirements."
     elif final_score >= 50:
-        summary = "Good match. Consider strengthening a few key skills."
+        summary = "Good match. Your profile is relevant, but some core skills are missing."
     elif final_score >= 25:
-        summary = "Partial match. Significant skill gaps to address."
+        summary = "Partial match. You have some related skills, but clear gaps exist."
     else:
-        summary = "Low match. This role may require different expertise."
+        summary = "Low match. The technology stack doesn't align well with your profile."
     
     return {
         'score': round(final_score, 1),
         'matched_skills': sorted(matched),
+        'semantic_matches': semantic_insights, # List of (req_skill, has_skill, score)
         'missing_skills': sorted(missing),
         'summary': summary,
-        'keyword_match': round(keyword_match, 1),
-        'semantic_match': round(semantic_match, 1) if semantic_match else None,
+        'keyword_match_count': len(matched),
+        'semantic_match_count': len(semantic_matched_reqs),
+        'full_text_sim': round(full_text_sim, 1) if full_text_sim > 0 else None,
     }
+
 
