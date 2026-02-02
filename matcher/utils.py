@@ -190,3 +190,65 @@ def sbert_similarity_score(resume_text, jd_text):
     sim = util.cos_sim(emb_r, emb_j).item()
     # numeric -> clamp 0..1
     return max(0.0, min(1.0, float(sim)))
+
+# ---------- Unified Matching Analysis ----------
+def analyze_match(resume_text, jd_text, resume_skills, jd_skills):
+    """
+    Unified matching analysis that provides actionable insights.
+    
+    Returns dict with:
+        - score: Overall compatibility (0-100)
+        - matched_skills: List of skills candidate has
+        - missing_skills: List of skills candidate needs
+        - summary: Human-readable summary
+        - keyword_match: Percentage based on skills overlap
+        - semantic_match: Percentage based on text similarity (if available)
+    """
+    resume_skills_set = set(resume_skills or [])
+    jd_skills_set = set(jd_skills or [])
+    
+    # 1. Keyword Match (Primary Signal)
+    if jd_skills_set:
+        matched = resume_skills_set.intersection(jd_skills_set)
+        missing = jd_skills_set - resume_skills_set
+        keyword_match = (len(matched) / len(jd_skills_set)) * 100
+    else:
+        matched = set()
+        missing = set()
+        keyword_match = 0.0
+    
+    # 2. Semantic Match (Secondary Signal, if available)
+    semantic_match = None
+    if SBERT_AVAILABLE and resume_text and jd_text:
+        try:
+            semantic_match = sbert_similarity_score(resume_text, jd_text) * 100
+        except Exception:
+            semantic_match = None
+    
+    # 3. Weighted Final Score
+    if semantic_match is not None:
+        # Use both signals: 70% keyword, 30% semantic
+        final_score = (0.7 * keyword_match) + (0.3 * semantic_match)
+    else:
+        # Use only keyword matching
+        final_score = keyword_match
+    
+    # 4. Generate Summary
+    if final_score >= 75:
+        summary = "Excellent match! You meet most of the requirements."
+    elif final_score >= 50:
+        summary = "Good match. Consider strengthening a few key skills."
+    elif final_score >= 25:
+        summary = "Partial match. Significant skill gaps to address."
+    else:
+        summary = "Low match. This role may require different expertise."
+    
+    return {
+        'score': round(final_score, 1),
+        'matched_skills': sorted(matched),
+        'missing_skills': sorted(missing),
+        'summary': summary,
+        'keyword_match': round(keyword_match, 1),
+        'semantic_match': round(semantic_match, 1) if semantic_match else None,
+    }
+

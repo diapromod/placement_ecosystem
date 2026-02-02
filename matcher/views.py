@@ -48,26 +48,15 @@ def home(request):
                 jd_obj.save()
                 jd_skills = jd_obj.required_skills or []
 
-            # Compute matching: both simple jaccard & heuristic on skills
+            # Use unified matching analysis
             res_skills = r.skills or []
-            jacc = utils.jaccard_score(res_skills, jd_skills) if jd_skills else None
-            heur = utils.heuristic_weighted_score(res_skills, jd_skills) if jd_skills else None
-
-            # optional SBERT semantic score if installed
-            sbert_score = None
-            if jd_text and utils.SBERT_AVAILABLE:
-                try:
-                    sbert_score = utils.sbert_similarity_score(resume_text, jd_text)
-                except Exception:
-                    sbert_score = None
-
-            # ✅ Convert fractional scores (0–1) → percentages (0–100)
-            if jacc is not None:
-                jacc = round(jacc * 100, 2)
-            if heur is not None:
-                heur = round(heur * 100, 2)
-            if sbert_score is not None:
-                sbert_score = round(sbert_score * 100, 2)
+            
+            if jd_file:
+                # Analyze match using new unified function
+                analysis = utils.analyze_match(resume_text, jd_text, res_skills, jd_skills)
+            else:
+                # No JD provided, just show resume data
+                analysis = None
 
             # Now render context
             context["result"] = {
@@ -76,9 +65,7 @@ def home(request):
                 "phone": r.phone,
                 "skills": res_skills,
                 "jd_skills": jd_skills,
-                "jaccard": jacc,
-                "heuristic_score": heur,
-                "sbert_score": sbert_score,
+                "analysis": analysis,  # New unified analysis
                 "resume_id": r.id,
                 "jd_id": jd_obj.id if jd_obj else None,
             }
