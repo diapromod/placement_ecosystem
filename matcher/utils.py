@@ -73,6 +73,16 @@ def extract_text_from_file(uploaded_file):
             return ""
 
 
+# Optional spaCy import for robust name extraction
+try:
+    import spacy
+    try:
+        NLP = spacy.load("en_core_web_sm")
+    except OSError:
+        NLP = None
+except ImportError:
+    NLP = None
+
 # ---------- Lightweight extraction helpers ----------
 _email_re = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 _phone_re = re.compile(r"(\+?\d{1,3}[-\s]?)?(\d{10}|\d{5}[-\s]?\d{5})")
@@ -89,18 +99,31 @@ def extract_phone(text):
 
 def extract_name(text):
     """
-    Heuristic: attempt to take first non-empty line and treat it as name.
-    Can be improved with NER models.
+    Robust name extraction using spaCy NER with heuristic fallback.
+    1. Try spaCy to identify PERSON entities
+    2. Fall back to first-line heuristic if spaCy unavailable
     """
     if not text:
         return None
-    # take first non-empty line with letters and at least two words
+    
+    # Try spaCy NER first
+    if NLP:
+        doc = NLP(text[:1000])  # Limit to first 1000 chars for performance
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.strip()
+                # Filter out obvious false positives
+                if (len(name.split()) >= 2 and 
+                    "resume" not in name.lower() and
+                    len(name) < 50):  # Reasonable name length
+                    return name
+    
+    # Fallback: heuristic (first non-empty line with 2-4 words)
     for line in text.splitlines():
         s = line.strip()
         if not s:
             continue
-        # simple heuristics: if the line contains letters and a space, treat as name
-        if re.search(r"[A-Za-z]", s) and len(s.split()) <= 4:
+        if re.search(r"[A-Za-z]", s) and 2 <= len(s.split()) <= 4:
             return s
     return None
 
