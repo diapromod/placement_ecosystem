@@ -112,6 +112,18 @@
                 {% csrf_token %}
                 <h2>Sign Up</h2>
 
+                <!-- Success/Error Messages -->
+                {% if messages %}
+                <div class="messages mb-3">
+                    {% for message in messages %}
+                    <p
+                        style="text-align: center; font-size: 14px; margin: 5px 0; color: {% if message.tags == 'success' %}#28a745{% else %}#dc3545{% endif %};">
+                        {{ message }}
+                    </p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <!-- Resume Upload Section -->
                 <div
                     style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">

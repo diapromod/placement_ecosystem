@@ -41,6 +41,11 @@ def process_resume(request):
                 "cgpa": cgpa,
                 "department": department,
             }
+            # Clear existing messages to prevent stacking if they upload multiple times
+            storage = messages.get_messages(request)
+            for _ in storage:
+                pass 
+
             print("DEBUG: Session data set:", request.session["registration_data"])
             messages.success(request, "Resume parsed successfully! Please review details.")
         except Exception as e:
@@ -60,9 +65,15 @@ def student_register(request):
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            # clear session data only after successful save
+            # clear session data and messages only after successful save
             if "registration_data" in request.session:
                 del request.session["registration_data"]
+            
+            # Clear all pending messages so they don't leak to login page
+            storage = messages.get_messages(request)
+            for _ in storage:
+                pass
+
             messages.success(request, "Registration successful! Please log in.")
             return redirect("student_login")
         else:
