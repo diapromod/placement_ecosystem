@@ -1,0 +1,85 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[left=0.7in,right=0.7in,top=0.7in,bottom=0.7in]{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\definecolor{primary}{RGB}{0,82,204}
+
+% Custom section formatting
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{5pt}
+
+\begin{document}
+\enlargethispage{2\baselineskip}
+
+% Header
+\begin{center}
+    {\Huge \textbf{ {{ student.first_name }} {{ student.last_name }} }} \\
+    \vspace{3mm}
+    \href{mailto:{{ student.email }}}{ {{ student.email }} } \textbar\ {{ student.contact_no }} \textbar\ ID: {{ student.university_roll_no }} \\
+    \textbf{ {{ student.department }} } \textbar\ CGPA: {{ student.cgpa }}/10.0 \textbar\ Class of 20{{ student.year_of_passout|default:"26" }}
+\end{center}
+
+\vspace{3mm}
+
+{% if content.objective %}
+\section*{Professional Summary}
+\textit{ {{ content.objective }} }
+{% endif %}
+
+{% if content.education %}
+\section*{Education}
+{% for edu in content.education %}
+    \textbf{ {{ edu.degree }} } \hfill \textit{ {{ edu.duration }} } \\
+    {{ edu.institution }} \hfill \textit{ {{ edu.details }} }
+    \vspace{1mm}
+{% endfor %}
+{% endif %}
+
+{% if content.skills %}
+\section*{Technical Skills}
+\textbf{Core Competencies:} {{ content.skills|join:", " }}
+{% endif %}
+
+{% if content.experience %}
+\section*{Professional Experience}
+{% for exp in content.experience %}
+    \textbf{ {{ exp.title }} } \textbar\ \textit{ {{ exp.company }} } \hfill \textit{ {{ exp.duration }} }
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+    {% for point in exp.points %}
+        \item {{ point }}
+    {% endfor %}
+    \end{itemize}
+{% endfor %}
+{% endif %}
+
+{% if content.projects %}
+\section*{Academic \& Personal Projects}
+{% for proj in content.projects %}
+    \textbf{ {{ proj.name }} } \hfill \textit{ {{ proj.duration }} }
+    \begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+    {% for point in proj.points %}
+        \item {{ point }}
+    {% endfor %}
+    \end{itemize}
+{% endfor %}
+{% endif %}
+
+{% if content.certifications %}
+\section*{Certifications}
+{{ content.certifications|join:", " }}
+{% endif %}
+
+{% if content.achievements %}
+\section*{Achievements \& Awards}
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+{% for ach in content.achievements %}
+    \item {{ ach }}
+{% endfor %}
+\end{itemize}
+{% endif %}
+
+\end{document}
