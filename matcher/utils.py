@@ -22,6 +22,15 @@ SKILL_LIST = [
     "pytorch", "git", "linux"
 ]
 
+# Scoring Configuration
+MATCH_CONFIG = {
+    "EXACT_MATCH_WEIGHT": 1.0,      # Reward for exact keyword match
+    "SEMANTIC_MATCH_WEIGHT": 0.85, # Reward for SBERT synonym/related match
+    "SEMANTIC_THRESHOLD": 0.75,    # Minimum similarity score for a semantic match
+    "CONTEXT_BONUS_MAX": 5.0,      # Max ± adjustment based on full text similarity
+    "CONTEXT_SIM_MIDPOINT": 50.0   # Similarity score above this gives bonus, below gives penalty
+}
+
 # ---------- File text extraction ----------
 def extract_text_from_pdf_fileobj(file_obj):
     """
@@ -293,7 +302,7 @@ def get_semantic_matches(candidate_skills, required_skills, threshold=0.75):
         scores = util.cos_sim(req_emb, cand_embs)[0]
         max_score, idx = scores.max().item(), scores.argmax().item()
         
-        if max_score >= threshold:
+        if max_score >= MATCH_CONFIG["SEMANTIC_THRESHOLD"]:
             matches.append((req, candidate_skills[idx], round(max_score, 2)))
             matched_set.add(req)
             
@@ -328,8 +337,9 @@ def analyze_match(resume_text, jd_text, resume_skills, jd_skills):
     # Total Score = (Exact Keyword Matches + Semantic Partial Matches) / Total Requirements
     total_reqs = len(jd_skills_set)
     if total_reqs > 0:
-        # We value exact matches at 1.0 and semantic matches at 0.85
-        score_val = (len(matched) * 1.0) + (len(semantic_matched_reqs) * 0.85)
+        # We value exact matches and semantic matches according to config
+        score_val = (len(matched) * MATCH_CONFIG["EXACT_MATCH_WEIGHT"]) + \
+                    (len(semantic_matched_reqs) * MATCH_CONFIG["SEMANTIC_MATCH_WEIGHT"])
         final_score = (score_val / total_reqs) * 100
     else:
         final_score = 0.0
@@ -342,7 +352,9 @@ def analyze_match(resume_text, jd_text, resume_skills, jd_skills):
     # Adjust final score slightly based on full-text context (±5%)
     # This rewards resumes that have the right 'tone' and 'context'
     if full_text_sim > 0:
-        context_bonus = (full_text_sim - 50) / 10 # -5 to +5 range
+        # Normalize: (score - midpoint) / scale -> provides a spread based on max bonus
+        # 50 midpoint, 10 scale for a ±5 range
+        context_bonus = (full_text_sim - MATCH_CONFIG["CONTEXT_SIM_MIDPOINT"]) / (50 / MATCH_CONFIG["CONTEXT_BONUS_MAX"])
         final_score = max(0, min(100, final_score + context_bonus))
 
     # 5. Generate Summary
