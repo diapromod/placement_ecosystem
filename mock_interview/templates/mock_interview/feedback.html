@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interview Feedback - {{ session.target_jd.title }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f5f7fb; }
+    .sidebar { width: 220px; height: 100vh; background: #f8f9fa; border-right: 1px solid #ddd; padding: 20px; display: flex; flex-direction: column; position: sticky; top: 0; }
+    .sidebar a { display: block; color: #333; padding: 10px; text-decoration: none; border-radius: 6px; margin-bottom: 8px; }
+    .sidebar a.active { background: #007bff; color: #fff; }
+    .main-content { flex: 1; padding: 40px; }
+    .score-circle { width: 150px; height: 150px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; border: 8px solid #007bff; margin: 0 auto 20px; }
+    .score-value { font-size: 3rem; font-weight: 700; color: #007bff; line-height: 1; }
+    .score-label { font-size: 0.9rem; color: #666; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="d-flex">
+    <div class="sidebar"> 
+      <img src="{% static 'images/logo.png' %}" alt="Logo" class="img-fluid mb-4">
+      <a href="{% url 'student_profile' %}">Profile</a>
+      <a href="{% url 'track_applications' %}">Track Applications</a>
+      <a href="{% url 'job_list' %}">Apply Jobs</a>
+      <a href="{% url 'ai_tools' %}" class="active">AI Tools</a>
+      <hr>
+      <a href="{% url 'mock_interview:chat_view' session.id %}" class="small text-muted">View Chat History</a>
+      <form method="post" action="/" class="mt-auto">{% csrf_token %}<button type="submit" class="btn btn-danger w-100">Logout</button></form>
+    </div>
+    <div class="main-content">
+        <div class="container" style="max-width: 900px;">
+            <div class="mb-5 text-center">
+                <h2 class="fw-bold">Interview Performance Report</h2>
+                <p class="text-muted">Target Role: {{ session.target_jd.title }}</p>
+            </div>
+            
+            <div class="row mb-5">
+                <div class="col-md-4">
+                    <div class="score-circle">
+                        <div class="score-value">{{ feedback.score|default:"--" }}</div>
+                        <div class="score-label">OVERALL SCORE</div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3">Executive Summary</h5>
+                            <p class="lead" style="font-size: 1.1rem; color: #444;">{{ feedback.summary }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100" style="border-left: 5px solid #28a745 !important;">
+                        <div class="card-body">
+                            <h5 class="fw-bold text-success mb-4">Key Strengths</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for strength in feedback.strengths %}
+                                <li class="list-group-item bg-transparent border-0 px-0 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#28a745" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16">
+                                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                    </svg>
+                                    {{ strength }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm border-0 h-100" style="border-left: 5px solid #dc3545 !important;">
+                        <div class="card-body">
+                            <h5 class="fw-bold text-danger mb-4">Areas for Improvement</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for weakness in feedback.weaknesses %}
+                                <li class="list-group-item bg-transparent border-0 px-0 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#dc3545" class="bi bi-exclamation-triangle-fill me-2" viewBox="0 0 16 16">
+                                      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                    </svg>
+                                    {{ weakness }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-0 mt-4 mb-5">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Personalized Recommendations</h5>
+                    <div class="row">
+                        {% for suggestion in feedback.suggestions %}
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <h6 class="fw-bold text-primary mb-2">Study Tip #{{ forloop.counter }}</h6>
+                                <p class="mb-0 small">{{ suggestion }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center pb-5">
+                <a href="{% url 'mock_interview:index' %}" class="btn btn-outline-primary px-5">Back to Dashboard</a>
+                <a href="{% url 'mock_interview:start_session' %}" class="btn btn-primary px-5 ms-3">Practice More</a>
+            </div>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

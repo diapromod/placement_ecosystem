@@ -118,13 +118,30 @@ def extract_name(text):
                     len(name) < 50):  # Reasonable name length
                     return name
     
-    # Fallback: heuristic (first non-empty line with 2-4 words)
-    for line in text.splitlines():
-        s = line.strip()
-        if not s:
+    return None
+
+def extract_job_title(text):
+    """
+    Heuristic to extract Job Title / Company from JD text.
+    Looks at the first few lines of the text.
+    """
+    if not text:
+        return None
+        
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return None
+        
+    # Heuristic: The first or second line often contains the title or company.
+    # We look for lines that aren't too long and contain letter characters.
+    for i in range(min(3, len(lines))):
+        line = lines[i]
+        # Ignore lines that look like generic headers (e.g., "JOB DESCRIPTION")
+        if line.lower() in ["job description", "jd", "position", "role"]:
             continue
-        if re.search(r"[A-Za-z]", s) and 2 <= len(s.split()) <= 4:
-            return s
+        if 5 < len(line) < 100:
+            return line
+            
     return None
 
 def extract_cgpa(text):
