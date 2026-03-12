@@ -44,8 +44,8 @@ class InterviewManager:
                 return response.text, None
             except Exception as e:
                 last_error = str(e)
+                print(f"DEBUG: Model {model_name} failed. Error: {last_error}")
                 if "429" in last_error or "quota" in last_error.lower() or "500" in last_error:
-                    print(f"Fallback: Model {model_name} failed, trying next...")
                     continue
                 else:
                     break
@@ -87,7 +87,17 @@ class InterviewManager:
             return text
         
         if self.demo_mode:
-            return "INTERVIEWER: Great answer. Given your background in this stack, how would you handle a sudden surge in traffic for a cloud-based application?"
+            # Smart Mock Pool to avoid repetition during demo failures
+            turn_idx = len(list(history_messages)) // 2
+            mock_questions = [
+                "I see. Can you walk me through a complex technical challenge you faced in one of your projects and how you resolved it?",
+                "Interesting approach. Given the stack mentioned in your resume, how would you handle a sudden surge in traffic for a cloud-based application?",
+                "That's a solid explanation. Can you discuss your experience with testing and how you ensure code reliability?",
+                "Let's pivot to behavioral. Tell me about a time you had a conflict with a teammate and how you handled it.",
+                "Excellent. Finally, do you have any questions for me about the company or the team culture?"
+            ]
+            q_idx = min(turn_idx, len(mock_questions) - 1)
+            return mock_questions[q_idx]
         
         if "429" in str(error) or "RESOURCE_EXHAUSTED" in str(error):
             return "API_QUOTA_REACHED: Google's free tier limit hit. Please try again later."

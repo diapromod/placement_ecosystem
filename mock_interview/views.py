@@ -70,7 +70,7 @@ def chat_view(request, session_id):
     if request.method == "POST":
         user_response = request.POST.get('message')
         if user_response:
-            is_manual_finish = user_response.lower().strip() == "__FINISH_NOW__"
+            is_manual_finish = user_response.strip().upper() == "__FINISH_NOW__"
             
             # Save user message if not a control signal
             if not is_manual_finish:
