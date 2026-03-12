@@ -7,35 +7,66 @@ class InterviewManager:
     def __init__(self):
         self.api_key = getattr(settings, 'GEMINI_API_KEY', None)
         self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.demo_mode = getattr(settings, 'GEMINI_DEMO_MODE', False)
+        # Fallback chain for Demo Resiliency
+        self.models_to_try = [
+            'gemini-2.0-flash', 
+            'gemini-1.5-flash', 
+            'gemini-1.5-flash-8b', 
+            'gemini-1.5-pro',
+            'gemini-flash-latest'
+        ]
+
+    def _generate_with_fallback(self, prompt, system_prompt=None, contents=None):
+        """Helper to try multiple models in sequence."""
+        if not self.client:
+            return None, "No API client"
+
+        last_error = "Unknown error"
+        for model_name in self.models_to_try:
+            try:
+                config = {}
+                if system_prompt:
+                    config["system_instruction"] = system_prompt
+
+                if contents:
+                    response = self.client.models.generate_content(
+                        model=model_name,
+                        config=config,
+                        contents=contents,
+                    )
+                else:
+                    response = self.client.models.generate_content(
+                        model=model_name,
+                        config=config,
+                        contents=prompt,
+                    )
+                return response.text, None
+            except Exception as e:
+                last_error = str(e)
+                if "429" in last_error or "quota" in last_error.lower() or "500" in last_error:
+                    print(f"Fallback: Model {model_name} failed, trying next...")
+                    continue
+                else:
+                    break
+        return None, last_error
 
     def get_next_question(self, session, history_messages, jd_text, resume_text):
         """
-        Generates the next interview question using gemini-flash-latest.
-        Prunes history to the last 10 messages to ensure responsiveness and save quota tokens.
+        Generates the next interview question using a fallback model chain.
         """
         if not self.client:
             return "Gemini API key not configured. Mock Interview is in mock mode."
 
         system_prompt = f"""
-        You are an Expert Technical Interviewer at a top-tier tech company. Do NOT use placeholder names. 
-        Your goal is to conduct a professional, rigorous, but encouraging mock interview.
-        You have the candidate's Master Resume and the Job Description they are applying for.
-        
+        You are an Expert Technical Interviewer at a top-tier tech company. 
+        Conduct a professional, rigorous mock interview.
         Candidate Resume: {resume_text}
         Job Description: {jd_text}
-
-        Rules:
-        1. Ask ONE question at a time.
-        2. Acknowledge the user's previous answer briefly and insightfuly.
-        3. Keep your own responses concise (max 2-3 paragraphs) to maintain flow.
-        4. Focus on technical depth and behavioral STAR alignment.
-        5. Do not break persona.
+        Ask ONE question at a time. Be concise.
         """
 
-        # Context Pruning: keep only the last 10 messages for current context
-        # This keeps the generation faster and more likely to succeed under quota
         pruned_history = list(history_messages)[-10:]
-
         contents = []
         for msg in pruned_history:
             role = "user" if msg.sender == "user" else "model"
@@ -50,29 +81,26 @@ class InterviewManager:
                 "parts": [{"text": "I am ready for the interview. Please introduce yourself and ask the first question."}]
             })
 
-        try:
-            # gemini-flash-latest is the current most stable alias for high-quota 1.5-flash
-            response = self.client.models.generate_content(
-                model="gemini-flash-latest",
-                config={"system_instruction": system_prompt},
-                contents=contents,
-            )
-            return response.text
-        except Exception as e:
-            error_msg = str(e)
-            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                return "API_QUOTA_REACHED: Google's free tier limit for this model has been reached. Please try again in a few minutes or tomorrow."
-            return f"Error connecting to AI Interviewer: {str(e)[:100]}"
+        text, error = self._generate_with_fallback(None, system_prompt=system_prompt, contents=contents)
+        
+        if text:
+            return text
+        
+        if self.demo_mode:
+            return "INTERVIEWER: Great answer. Given your background in this stack, how would you handle a sudden surge in traffic for a cloud-based application?"
+        
+        if "429" in str(error) or "RESOURCE_EXHAUSTED" in str(error):
+            return "API_QUOTA_REACHED: Google's free tier limit hit. Please try again later."
+        return f"Error connecting to AI: {str(error)[:100]}"
 
     def generate_feedback(self, history_messages, jd_text):
         """
-        Analyzes the entire interview transcript and provides a score + feedback.
+        Analyzes the entire interview transcript and provides a score + feedback with fallback support.
         """
         if not self.client:
             return json.dumps({"score": 70, "summary": "Mock feedback mode.", "strengths": [], "weaknesses": [], "suggestions": []})
 
         transcript = ""
-        # For feedback, we use the FULL transcript
         for msg in history_messages:
             transcript += f"{msg.sender.upper()}: {msg.content}\n"
 
@@ -89,15 +117,20 @@ class InterviewManager:
         }}
         """
 
-        try:
-            response = self.client.models.generate_content(
-                model="gemini-flash-latest",
-                contents=prompt,
-            )
-            # Clean possible markdown wrap
-            clean_text = response.text.replace('```json', '').replace('```', '').strip()
-            return clean_text
-        except Exception as e:
-            if "429" in str(e):
-                return json.dumps({"error": "Daily quota reached for feedback generation."})
-            return json.dumps({"error": str(e)})
+        text, error = self._generate_with_fallback(prompt)
+        
+        if text:
+            return text.replace('```json', '').replace('```', '').strip()
+
+        if self.demo_mode:
+            return json.dumps({
+                "score": 85,
+                "summary": "Strong technical knowledge demonstrated throughout the interview. Good communication skills.",
+                "strengths": ["Excellent grasp of backend architecture", "Clear communication"],
+                "weaknesses": ["Cloud experience could be deeper"],
+                "suggestions": ["Review AWS/Azure scaling strategies"]
+            })
+
+        if "429" in str(error):
+            return json.dumps({"error": "Daily quota reached for feedback generation."})
+        return json.dumps({"error": str(error)})

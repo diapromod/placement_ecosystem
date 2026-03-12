@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,13 +40,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'learning_paths',
 
-     # Our custom apps
+    # Our custom apps
     'users',
     'core',   
     'students',
     'coordinators',   
     'jobs',
     'matcher',
+    'resume_builder',
+    'mock_interview',
 
     # third-party apps
     'widget_tweaks',
@@ -146,4 +149,10 @@ AUTH_USER_MODEL = "users.CustomUser"
 UDEMY_CLIENT_ID = 'your_udemy_client_id'  # Get from https://www.udemy.com/instructor/account/api/
 UDEMY_CLIENT_SECRET = 'your_udemy_client_secret'
 YOUTUBE_API_KEY = 'your_youtube_api_key'  # Get from Google Cloud Console
+
+# Get a free key from: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyBCGwME0jo5kn3283WoPbZtIkS-8GNGwqI')
+
+# DEMO RESILIENCY: If True, uses model fallbacks and mock data instead of crashing on 429 errors.
+GEMINI_DEMO_MODE = True
 

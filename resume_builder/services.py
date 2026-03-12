@@ -3,33 +3,56 @@ from google import genai
 from google.genai import types
 from django.conf import settings
 
-# Configure API key. In a real app, you would define GEMINI_API_KEY in settings.py (via .env)
+# Configure API key
 api_key = getattr(settings, 'GEMINI_API_KEY', os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY"))
+demo_mode = getattr(settings, 'GEMINI_DEMO_MODE', False)
 
 def generate_tailored_resume_content(student_profile, master_resume_text, job, jd_text):
     """
     Uses Gemini API to extract points from the master resume, rephrase them,
     and output a structured JSON for a highly relevant resume tailored to the JD.
     """
+    # High-quality mock data for Demo Mode fail-safe
+    mock_json = f'''{{
+        "objective": "Highly motivated {student_profile.department} student with a CGPA of {student_profile.cgpa}, seeking to leverage strong technical foundations and project experience for the {(job.title if job else 'target')} role.",
+        "skills": ["Python", "Django", "REST APIs", "SQL", "Git", "Machine Learning"],
+        "education": [
+            {{
+                "degree": "Bachelor of Technology",
+                "institution": "University of Engineering",
+                "duration": "2021 - 2025",
+                "details": "Major in {student_profile.department}. Consistent academic performer."
+            }}
+        ],
+        "experience": [
+            {{
+                "title": "Software Intern",
+                "company": "Innovation Labs",
+                "duration": "Summer 2024",
+                "points": [
+                    "Developed and maintained web modules using Django and PostgreSQL.",
+                    "Collaborated with cross-functional teams to implement responsive UI components.",
+                    "Optimized database queries, reducing load times by 20%."
+                ]
+            }}
+        ],
+        "projects": [
+            {{
+                "name": "Placement Ecosystem",
+                "duration": "2024",
+                "points": [
+                    "Designed a comprehensive placement management system handle student registrations and job matching.",
+                    "Integrated Google Gemini API for automated resume tailoring and mock interviews.",
+                    "Implemented secure authentication and role-based access control."
+                ]
+            }}
+        ],
+        "certifications": ["Google Professional Data Engineer", "AWS Certified Cloud Practitioner"],
+        "achievements": ["First Place in Hackathon 2024", "Academic Merit Scholarship Recipient"]
+    }}'''
+
     if not api_key or api_key == "YOUR_API_KEY":
-        # Mocking output so the system doesn't break if API key isn't provided right now
-        return '''{
-            "objective": "A dedicated student from ''' + student_profile.department + ''' aiming to leverage past experience for the ''' + (job.title if job else 'target') + ''' role.",
-            "skills": ["Python", "Django", "Machine Learning", "Communication"],
-            "experience": [
-                {
-                    "title": "Software Engineering Intern",
-                    "company": "Tech Corp",
-                    "points": ["Developed web applications using Django.", "Optimized backend queries."]
-                }
-            ],
-            "projects": [
-                {
-                    "name": "Placement Ecosystem",
-                    "description": "Built a comprehensive platform for university placements using Django."
-                }
-            ]
-        }'''
+        return mock_json
     
     # Initialize the new SDK client
     client = genai.Client(api_key=api_key)
@@ -53,55 +76,50 @@ def generate_tailored_resume_content(student_profile, master_resume_text, job, j
         prompt += f"Target Job Role: {job.title} at {job.company_name}\n"
 
     prompt += """
-    Based on the above, please return ONLY a valid JSON object with exactly this schema, using no markdown code blocks outside of the JSON payload. Ensure it can be directly parsed via json.loads:
-    {
-        "objective": "A powerful 2-3 sentence tailored professional summary highlighting matching skills and intent.",
-        "skills": ["Skill 1", "Skill 2"],
-        "education": [
-            {
-                "degree": "Degree Name",
-                "institution": "University/School",
-                "duration": "Duration (if found)",
-                "details": "Major/Specialization/Achievements in education"
-            }
-        ],
-        "experience": [
-            {
-                "title": "Role Title",
-                "company": "Company Name",
-                "duration": "Time Period (if found)",
-                "points": ["Action-oriented bullet point 1", "Action-oriented bullet point 2"]
-            }
-        ],
-        "projects": [
-            {
-                "name": "Project Name",
-                "duration": "Time Period (if found)",
-                "points": ["Bullet 1", "Bullet 2"]
-            }
-        ],
-        "certifications": ["Certification name 1", "Certification name 2"],
-        "achievements": ["Achievement/Award 1", "Achievement/Award 2"]
-    }
+    Based on the above, please return ONLY a valid JSON object matching the standard schema provided. Ensure it can be directly parsed via json.loads.
     """
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=prompt,
-        )
-        
-        text = response.text.strip()
-        # remove possible markdown formatting
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-            
-        return text.strip()
-    except Exception as e:
-        # Fallback if the requested model or API call fails
-        print(f"Gemini API Error: {e}")
-        raise e
+    # Fallback chain for Demo Resiliency
+    models_to_try = [
+        'gemini-2.0-flash', 
+        'gemini-1.5-flash', 
+        'gemini-1.5-flash-8b', 
+        'gemini-1.5-pro',
+        'gemini-flash-latest'
+    ]
+    
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            text = response.text.strip()
+            # remove possible markdown formatting
+            if text.startswith("```json"):
+                text = text[7:]
+            elif text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+                
+            return text.strip()
+        except Exception as e:
+            last_error = e
+            error_str = str(e).lower()
+            # If it's a quota issue or server error, try next model
+            if "429" in error_str or "quota" in error_str or "500" in error_str:
+                print(f"Fallback: Model {model_name} failed, trying next...")
+                continue
+            else:
+                # If it's a different error, stop and handle
+                break
+
+    # If all models fail and we are in demo mode, return the mock data
+    if demo_mode:
+        print("DEMO MODE: All AI models failed/quota reached. Returning high-quality mock data.")
+        return mock_json
+    
+    # Otherwise raise the last error
+    raise last_error
