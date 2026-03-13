@@ -5,13 +5,17 @@ from django.http import HttpResponse
 
 def escape_latex(text):
     """
-    Escapes characters that are special in LaTeX:
-    & % $ # _ { } ~ ^ \
+    Escapes characters that are special in LaTeX.
     """
     if not text:
         return ""
-    # simple replacements
+    
+    # Cast to string and handle basic whitespace
+    text = str(text)
+    
+    # Replacements dictionary for common LaTeX special characters
     replacements = {
+        '\\': r'\textbackslash{}',
         '&': r'\&',
         '%': r'\%',
         '$': r'\$',
@@ -21,11 +25,24 @@ def escape_latex(text):
         '}': r'\}',
         '~': r'\textasciitilde{}',
         '^': r'\textasciicircum{}',
-        '\\': r'\textbackslash{}',
+        '[': r'{[}',
+        ']': r'{]}',
+        '\n': r'\\ ',  # Basic line break support
     }
-    # Create a regex to match any of the keys in replacements
-    regex = re.compile('|'.join(re.escape(str(key)) for key in replacements.keys()))
-    return regex.sub(lambda match: replacements[match.group(0)], str(text))
+    
+    # We use a specialized function to avoid double-escaping the backslashes we insert
+    def replace(match):
+        return replacements[match.group(0)]
+    
+    # Match patterns
+    pattern = re.compile('|'.join(re.escape(k) for k in replacements.keys()))
+    
+    escaped = pattern.sub(replace, text)
+    
+    # Replace single quotes with balanced LaTeX quotes
+    escaped = escaped.replace("'", "''").replace('"', "''")
+    
+    return escaped
 
 def compile_latex_to_pdf(tex_content):
     """

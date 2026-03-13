@@ -10,6 +10,7 @@ class InterviewManager:
         self.demo_mode = getattr(settings, 'GEMINI_DEMO_MODE', False)
         # Fallback chain for Demo Resiliency
         self.models_to_try = [
+            'gemini-2.5-flash',
             'gemini-2.0-flash', 
             'gemini-1.5-flash', 
             'gemini-1.5-flash-8b', 
@@ -51,19 +52,36 @@ class InterviewManager:
                     break
         return None, last_error
 
-    def get_next_question(self, session, history_messages, jd_text, resume_text):
+    def get_next_question(self, session, history_messages, jd_text, resume_text, candidate_name="Candidate", company_name="the company", current_turn=1, total_turns=10):
         """
         Generates the next interview question using a fallback model chain.
+        Now includes turn-awareness and strict personalization grounding.
         """
         if not self.client:
             return "Gemini API key not configured. Mock Interview is in mock mode."
 
         system_prompt = f"""
-        You are an Expert Technical Interviewer at a top-tier tech company. 
-        Conduct a professional, rigorous mock interview.
+        You are an Expert Technical Interviewer from {company_name}. 
+        Conduct a professional, rigorous mock interview for the candidate: {candidate_name}.
+        
         Candidate Resume: {resume_text}
         Job Description: {jd_text}
-        Ask ONE question at a time. Be concise.
+        
+        INTERVIEW PROGRESS: Turn {current_turn} of {total_turns}
+        
+        CURRICULUM:
+        - Turn 1: Professional greeting (address the candidate as {candidate_name}) and a soft introductory question.
+        - Turns 2-3: Resume-specific questions (experience, projects).
+        - Turns 4-7: Technical deep dive based on JD and Resume skills.
+        - Turns 8-9: Behavioral and situational/scenario questions.
+        - Turn 10: Final wrap-up. Acknowledge it's the end, thank the candidate, and do NOT ask any more questions.
+        
+        STRICT CONSTRAINTS:
+        - NEVER use generic placeholders like "[Your Name]", "[Company Name]", or "[Interviewer Name]". 
+        - If you need to identify yourself, use a fictional professional name or just "Interviewer from {company_name}".
+        - Ask ONE specific question at a time.
+        - Be concise and professional.
+        - If Turn is {total_turns}, provide a closing statement ONLY.
         """
 
         pruned_history = list(history_messages)[-10:]
@@ -76,27 +94,36 @@ class InterviewManager:
             })
 
         if not contents:
-            contents.append({
+            # First turn logic: AI initiates
+            text, error = self._generate_with_fallback(None, system_prompt=system_prompt, contents=[{
                 "role": "user",
                 "parts": [{"text": "I am ready for the interview. Please introduce yourself and ask the first question."}]
-            })
-
-        text, error = self._generate_with_fallback(None, system_prompt=system_prompt, contents=contents)
+            }])
+        else:
+            text, error = self._generate_with_fallback(None, system_prompt=system_prompt, contents=contents)
         
         if text:
             return text
         
+        # Turn 10 should ALWAYS be a wrap-up, even in mock/fail modes
+        if current_turn >= total_turns:
+            return "Thank you for sharing that. We have reached the end of our structured interview session. I have enough information to provide your feedback now. Best of luck!"
+
         if self.demo_mode:
             # Smart Mock Pool to avoid repetition during demo failures
-            turn_idx = len(list(history_messages)) // 2
+            # Using current_turn for better predictability
             mock_questions = [
                 "I see. Can you walk me through a complex technical challenge you faced in one of your projects and how you resolved it?",
                 "Interesting approach. Given the stack mentioned in your resume, how would you handle a sudden surge in traffic for a cloud-based application?",
                 "That's a solid explanation. Can you discuss your experience with testing and how you ensure code reliability?",
                 "Let's pivot to behavioral. Tell me about a time you had a conflict with a teammate and how you handled it.",
-                "Excellent. Finally, do you have any questions for me about the company or the team culture?"
+                "Excellent. Given the job requirements, what's your approach to learning new technologies quickly?",
+                "Understood. How do you handle tight deadlines and shifting priorities in a fast-paced environment?",
+                "Can you describe a situation where you had to work with a difficult stakeholder or client?",
+                "What's your preferred method for documenting your code and architectural decisions?",
+                "Finally, where do you see your technical skills evolving in the next two years?"
             ]
-            q_idx = min(turn_idx, len(mock_questions) - 1)
+            q_idx = min(current_turn - 1, len(mock_questions) - 1)
             return mock_questions[q_idx]
         
         if "429" in str(error) or "RESOURCE_EXHAUSTED" in str(error):

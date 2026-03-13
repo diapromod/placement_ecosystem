@@ -31,7 +31,8 @@ def generate_resume(request, resume_id, jd_id):
             job=job,
             jd_text=job_desc.raw_text
         )
-        content = json.loads(content_json_str)
+        content_raw = json.loads(content_json_str)
+        content = clean_resume_content(content_raw)
         error = None
     except Exception as e:
         content = None
@@ -60,6 +61,64 @@ from django.http import HttpResponse, Http404
 from django.template.loader import render_to_string
 from .utils import escape_latex, compile_latex_to_pdf
 
+def clean_resume_content(content):
+    """
+    Cleans and flattens AI-generated content to ensure it's human-readable
+    and safe for both HTML and LaTeX rendering.
+    """
+    def flatten(val):
+        if isinstance(val, dict):
+            # Try to find common text fields
+            name = val.get('name') or val.get('title') or val.get('value')
+            if name: return str(name)
+            # Fallback to joining items
+            return ", ".join(f"{str(v)}" for v in val.values() if v)
+        return str(val)
+
+    cleaned = {}
+    
+    # Simple text fields
+    if 'objective' in content:
+        cleaned['objective'] = flatten(content['objective'])
+    
+    # Simple lists
+    for field in ['skills', 'certifications', 'achievements']:
+        if field in content:
+            raw_list = content.get(field, [])
+            if isinstance(raw_list, list):
+                cleaned[field] = [flatten(item) for item in raw_list if item]
+            else:
+                cleaned[field] = [flatten(raw_list)]
+
+    # Nested structures
+    cleaned['education'] = []
+    for edu in content.get('education', []):
+        cleaned['education'].append({
+            'degree': flatten(edu.get('degree', '')),
+            'institution': flatten(edu.get('institution', '')),
+            'duration': flatten(edu.get('duration', '')),
+            'details': flatten(edu.get('details', ''))
+        })
+
+    cleaned['experience'] = []
+    for exp in content.get('experience', []):
+        cleaned['experience'].append({
+            'title': flatten(exp.get('title', '')),
+            'company': flatten(exp.get('company', '')),
+            'duration': flatten(exp.get('duration', '')),
+            'points': [flatten(p) for p in exp.get('points', []) if p]
+        })
+        
+    cleaned['projects'] = []
+    for proj in content.get('projects', []):
+        cleaned['projects'].append({
+            'name': flatten(proj.get('name', '')),
+            'duration': flatten(proj.get('duration', '')),
+            'points': [flatten(p) for p in proj.get('points', []) if p]
+        })
+        
+    return cleaned
+
 @login_required
 def download_pdf(request, generated_id):
     """
@@ -69,42 +128,35 @@ def download_pdf(request, generated_id):
     gen_resume = get_object_or_404(GeneratedResume, id=generated_id, student=request.user)
     
     try:
-        content = json.loads(gen_resume.generated_content)
+        raw_content = json.loads(gen_resume.generated_content)
         student_profile = request.user.student_profile
         
-        # We must escape all strings in the content dict before sending to LaTeX
-        escaped_content = {}
-        if 'objective' in content: escaped_content['objective'] = escape_latex(content['objective'])
-        if 'skills' in content: escaped_content['skills'] = [escape_latex(s) for s in content['skills']]
+        # 1. Clean data (flatten dicts, etc)
+        content = clean_resume_content(raw_content)
+
+        # 2. Escape for LaTeX
+        escaped_content = {
+            'objective': escape_latex(content.get('objective', '')),
+            'skills': [escape_latex(s) for s in content.get('skills', [])],
+            'certifications': [escape_latex(c) for c in content.get('certifications', [])],
+            'achievements': [escape_latex(a) for a in content.get('achievements', [])],
+            'education': [],
+            'experience': [],
+            'projects': []
+        }
         
-        escaped_content['education'] = []
-        for edu in content.get('education', []):
-            escaped_content['education'].append({
-                'degree': escape_latex(edu.get('degree', '')),
-                'institution': escape_latex(edu.get('institution', '')),
-                'duration': escape_latex(edu.get('duration', '')),
-                'details': escape_latex(edu.get('details', ''))
-            })
+        for edu in content['education']:
+            escaped_content['education'].append({k: escape_latex(v) for k, v in edu.items()})
 
-        escaped_content['experience'] = []
-        for exp in content.get('experience', []):
-            escaped_content['experience'].append({
-                'title': escape_latex(exp.get('title', '')),
-                'company': escape_latex(exp.get('company', '')),
-                'duration': escape_latex(exp.get('duration', '')),
-                'points': [escape_latex(p) for p in exp.get('points', [])]
-            })
-            
-        escaped_content['projects'] = []
-        for proj in content.get('projects', []):
-            escaped_content['projects'].append({
-                'name': escape_latex(proj.get('name', '')),
-                'duration': escape_latex(proj.get('duration', '')),
-                'points': [escape_latex(p) for p in proj.get('points', [])]
-            })
+        for exp in content['experience']:
+            cleaned_exp = {k: escape_latex(v) if k != 'points' else [escape_latex(p) for p in v] 
+                          for k, v in exp.items()}
+            escaped_content['experience'].append(cleaned_exp)
 
-        escaped_content['certifications'] = [escape_latex(c) for c in content.get('certifications', [])]
-        escaped_content['achievements'] = [escape_latex(a) for a in content.get('achievements', [])]
+        for proj in content['projects']:
+            cleaned_proj = {k: escape_latex(v) if k != 'points' else [escape_latex(p) for p in v] 
+                           for k, v in proj.items()}
+            escaped_content['projects'].append(cleaned_proj)
             
         # Also escape student facts
         context = {
@@ -135,6 +187,26 @@ def download_pdf(request, generated_id):
         
     except Exception as e:
         return HttpResponse(f"Failed to generate PDF: {str(e)}", status=500)
+
+@login_required
+def view_resume(request, generated_id):
+    """
+    Displays a previously generated resume without re-triggering the AI.
+    Handles data cleaning and flattening for consistent rendering.
+    """
+    gen_resume = get_object_or_404(GeneratedResume, id=generated_id, student=request.user)
+    
+    try:
+        raw_content = json.loads(gen_resume.generated_content)
+        content = clean_resume_content(raw_content)
+    except Exception as e:
+        return redirect('resume_builder:index') # Fallback if data is corrupted
+        
+    return render(request, 'resume_builder/resume_template.html', {
+        'content': content,
+        'student': request.user.student_profile,
+        'generated_id': gen_resume.id
+    })
 
 @login_required
 def delete_resume(request, resume_id):

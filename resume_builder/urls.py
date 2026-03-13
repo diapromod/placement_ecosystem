@@ -7,5 +7,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('generate/<int:resume_id>/<int:jd_id>/', views.generate_resume, name='generate_resume'),
     path('download-pdf/<int:generated_id>/', views.download_pdf, name='download_pdf'),
+    path('view/<int:generated_id>/', views.view_resume, name='view_resume'),
     path('delete/<int:resume_id>/', views.delete_resume, name='delete_resume'),
 ]

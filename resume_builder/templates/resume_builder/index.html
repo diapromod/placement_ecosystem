@@ -93,7 +93,7 @@
                         </div>
                         <div class="card-body">
                             <h5 class="card-title">Target: {{ resume.target_job_description.title|default:"Unknown Job Name" }}</h5>
-                            <a href="{% url 'resume_builder:generate_resume' resume.source_resume.id resume.target_job_description.id %}" class="btn btn-outline-primary mt-2">Preview HTML</a>
+                            <a href="{% url 'resume_builder:view_resume' resume.id %}" class="btn btn-outline-primary mt-2">Preview HTML</a>
                             <a href="{% url 'resume_builder:download_pdf' resume.id %}" class="btn btn-primary mt-2">Download LaTeX PDF</a>
                         </div>
                     </div>

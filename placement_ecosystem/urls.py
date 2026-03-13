@@ -29,7 +29,8 @@ urlpatterns = [
     path("jobs/", include("jobs.urls")),
     path('matcher/', include('matcher.urls')),
     path('learning_paths/', include('learning_paths.urls', namespace='learning_paths')),
-
+    path('resume-builder/', include('resume_builder.urls')),
+    path('mock-interview/', include('mock_interview.urls')),
 ]
 
 if settings.DEBUG:

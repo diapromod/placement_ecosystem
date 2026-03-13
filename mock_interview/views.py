@@ -46,7 +46,16 @@ def start_session(request):
         resume = Resume.objects.filter(email=request.user.email).first()
         resume_text = resume.raw_text if resume else "Not available."
         
-        first_question = interview_manager.get_next_question(session, [], jd.raw_text, resume_text)
+        profile = request.user.student_profile
+        candidate_name = profile.first_name if profile.first_name else request.user.username
+        company_name = jd.title if jd.title else "the company"
+
+        first_question = interview_manager.get_next_question(
+            session, [], jd.raw_text, resume_text, 
+            candidate_name=candidate_name,
+            company_name=company_name,
+            current_turn=1
+        )
         InterviewMessage.objects.create(session=session, sender='ai', content=first_question)
         
         return redirect('mock_interview:chat_view', session_id=session.id)
@@ -101,11 +110,18 @@ def chat_view(request, session_id):
             resume = Resume.objects.filter(email=request.user.email).first()
             resume_text = resume.raw_text if resume else "Not available."
             
+            profile = request.user.student_profile
+            candidate_name = profile.first_name if profile.first_name else request.user.username
+            company_name = session.target_jd.title if session.target_jd.title else "the company"
+
             next_question = interview_manager.get_next_question(
                 session, 
                 session.messages.all(), 
                 session.target_jd.raw_text, 
-                resume_text
+                resume_text,
+                candidate_name=candidate_name,
+                company_name=company_name,
+                current_turn=msg_count + 1
             )
             InterviewMessage.objects.create(session=session, sender='ai', content=next_question)
             

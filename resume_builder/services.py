@@ -76,11 +76,48 @@ def generate_tailored_resume_content(student_profile, master_resume_text, job, j
         prompt += f"Target Job Role: {job.title} at {job.company_name}\n"
 
     prompt += """
-    Based on the above, please return ONLY a valid JSON object matching the standard schema provided. Ensure it can be directly parsed via json.loads.
+    Based on the above, please return ONLY a valid JSON object matching this exact schema:
+    {
+        "objective": "A 2-3 sentence professional summary tailored to the JD",
+        "skills": ["Skill 1", "Skill 2"],
+        "education": [
+            {
+                "degree": "Full Degree Name",
+                "institution": "Full Institution Name",
+                "duration": "Year range",
+                "details": "Key academic highlights"
+            }
+        ],
+        "experience": [
+            {
+                "title": "Job Title",
+                "company": "Company Name",
+                "duration": "Duration",
+                "points": ["Achievement 1", "Achievement 2"]
+            }
+        ],
+        "projects": [
+            {
+                "name": "Project Name",
+                "duration": "Year/Period",
+                "points": ["Highlight 1", "Highlight 2"]
+            }
+        ],
+        "certifications": ["Certification Name 1", "Certification Name 2"],
+        "achievements": ["Achievement Name 1", "Achievement Name 2"]
+    }
+    
+    IMPORTANT: 
+    - **NO INTERNAL SLUGS**: DO NOT use category names or slugs like 'languages', 'frameworks_libraries', 'databases', 'tools_version_control', or 'web_technologies' as skill names. These are internal database labels and must NOT appear on the resume. Instead, list specific skills like 'Python', 'Django', 'PostgreSQL', 'Git', etc.
+    - **HUMAN READABLE**: All text must be natural, professional, and human-readable. Do not return raw code or technical internal identifiers.
+    - **FLAT ARRAYS**: Fields like 'certifications', 'achievements', 'skills', and 'points' MUST be flat arrays of STRINGS. Do not nest objects or dictionaries inside them.
+    - **NO EMPTY BLOCKS**: If a section (like Projects or Experience) has no relevant content from the master resume, return an empty array `[]` for that field. Do not include boilerplate like "No experience found".
+    - Do not include any text, markings, or markdown outside the JSON block.
     """
     
     # Fallback chain for Demo Resiliency
     models_to_try = [
+        'gemini-2.5-flash',
         'gemini-2.0-flash', 
         'gemini-1.5-flash', 
         'gemini-1.5-flash-8b', 

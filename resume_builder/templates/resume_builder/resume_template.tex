@@ -20,7 +20,7 @@
     {\Huge \textbf{ {{ student.first_name }} {{ student.last_name }} }} \\
     \vspace{3mm}
     \href{mailto:{{ student.email }}}{ {{ student.email }} } \textbar\ {{ student.contact_no }} \textbar\ ID: {{ student.university_roll_no }} \\
-    \textbf{ {{ student.department }} } \textbar\ CGPA: {{ student.cgpa }}/10.0 \textbar\ Class of 20{{ student.year_of_passout|default:"26" }}
+    \textbf{ {{ student.department }} } \textbar\ CGPA: {{ student.cgpa }}/10.0 \textbar\ Class of {{ student.year_of_passout|default:"2026" }}
 \end{center}
 
 \vspace{3mm}
@@ -34,7 +34,7 @@
 \section*{Education}
 {% for edu in content.education %}
     \textbf{ {{ edu.degree }} } \hfill \textit{ {{ edu.duration }} } \\
-    {{ edu.institution }} \hfill \textit{ {{ edu.details }} }
+    {{ edu.institution }} \\ {{ edu.details }}
     \vspace{1mm}
 {% endfor %}
 {% endif %}
@@ -48,11 +48,13 @@
 \section*{Professional Experience}
 {% for exp in content.experience %}
     \textbf{ {{ exp.title }} } \textbar\ \textit{ {{ exp.company }} } \hfill \textit{ {{ exp.duration }} }
+    {% if exp.points %}
     \begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
     {% for point in exp.points %}
         \item {{ point }}
     {% endfor %}
     \end{itemize}
+    {% endif %}
 {% endfor %}
 {% endif %}
 
@@ -60,11 +62,13 @@
 \section*{Academic \& Personal Projects}
 {% for proj in content.projects %}
     \textbf{ {{ proj.name }} } \hfill \textit{ {{ proj.duration }} }
+    {% if proj.points %}
     \begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
     {% for point in proj.points %}
         \item {{ point }}
     {% endfor %}
     \end{itemize}
+    {% endif %}
 {% endfor %}
 {% endif %}
 
@@ -75,11 +79,13 @@
 
 {% if content.achievements %}
 \section*{Achievements \& Awards}
+{% if content.achievements %}
 \begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
 {% for ach in content.achievements %}
     \item {{ ach }}
 {% endfor %}
 \end{itemize}
+{% endif %}
 {% endif %}
 
 \end{document}

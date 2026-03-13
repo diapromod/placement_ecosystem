@@ -151,7 +151,7 @@
                 <span>📍 Student ID: {{ student.university_roll_no }}</span>
             </div>
             <div class="mt-2 text-muted fw-bold">
-                {{ student.department }} | CGPA: {{ student.cgpa }}/10.0 | Expected Graduation: 20{{ student.year_of_passout|default:"26" }}
+                {{ student.department }} | CGPA: {{ student.cgpa }}/10.0 | Expected Graduation: {{ student.year_of_passout|default:"2026" }}
             </div>
         </div>
 

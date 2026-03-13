@@ -44,6 +44,7 @@ def home(request):
                 except Exception:
                     jd_text = ""
                 jd_obj.raw_text = jd_text
+                jd_obj.title = utils.extract_job_title(jd_text) or "Untitled JD"
                 jd_obj.required_skills = utils.parse_jd_for_skills(jd_text)
                 jd_obj.save()
                 jd_skills = jd_obj.required_skills or []

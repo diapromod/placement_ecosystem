@@ -216,14 +216,18 @@
 
         <hr>
 
-        <div class="text-center">
+        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4">
           {% if result.jd_id %}
           <a href="{% url 'learning_paths:recommend' result.resume_id result.jd_id %}"
-            class="btn btn-success px-4 me-2">
+            class="btn btn-success px-4 w-100 w-md-auto">
             Get Learning Path Recommendation
           </a>
+          <a href="{% url 'resume_builder:generate_resume' result.resume_id result.jd_id %}"
+            class="btn btn-warning px-4 w-100 w-md-auto">
+            Generate Tailored Resume
+          </a>
           {% endif %}
-          <a href="{% url 'matcher:home' %}" class="btn btn-primary px-4">
+          <a href="{% url 'matcher:home' %}" class="btn btn-outline-primary px-4 w-100 w-md-auto">
             Back to Analyzer
           </a>
         </div>

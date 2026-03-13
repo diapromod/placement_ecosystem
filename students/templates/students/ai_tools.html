@@ -94,12 +94,14 @@
         <a href="{% url 'matcher:home' %}" class="tool-card text-decoration-none text-dark d-block">
         Job Match Analyzer
         </a>
-        <div class="tool-card">Company Specific Resume Generator</div>
+        <a href="{% url 'resume_builder:index' %}" class="tool-card text-decoration-none text-dark d-block">
+          Company Specific Resume Generator
+        </a>
         <a href="{% url 'learning_paths:intro' %}"
           class="tool-card text-decoration-none text-dark d-block">
           Learning Path Recommender
         </a>
-        <div class="tool-card">Mock Interview</div>
+        <a href="{% url 'mock_interview:index' %}" class="tool-card text-decoration-none text-dark d-block">Mock Interview</a>
     </div>
   </div>
 </body>
